@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 🔷 PowerPlay Custom Styles */
+body {
+  @apply bg-[#050A1F] text-white min-h-screen font-sans;
+}
+
+a {
+  @apply text-cyan-400 transition-colors;
+}
+
+a:hover {
+  @apply text-cyan-300;
+}
+
+button {
+  @apply font-semibold transition-colors;
+}
+
+/* Hide scrollbar utility */
+.scrollbar-hide {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
