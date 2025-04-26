@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
-import { sessionData } from '@/lib/sessionData';
+import { supabase } from '../../lib/supabase';
+import { sessionData } from '../../lib/sessionData';
 import Image from 'next/image';
 import Link from 'next/link';
 
