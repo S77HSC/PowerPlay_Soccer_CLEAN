@@ -2,57 +2,14 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import confetti from "canvas-confetti";
 import { useSearchParams, useRouter } from "next/navigation";
-
-const sessionData = {
-  session_1_toetaps: {
-    title: "Skill Session 1: Toe Taps",
-    video: "/videos/session_1_toetaps.mp4",
-    description: "Quick footwork drill to improve control and rhythm using alternate toe taps.",
-    thumbnail: "/videos/session_1_toetaps-thumbnail.jpg",
-    unlockXP: 0,
-  },
-  session_2_ticktocks: {
-    title: "Skill Session 2: Tick Tocks",
-    video: "/videos/session_2_ticktocks.mp4",
-    description: "A controlled inside-outside rhythm drill to master tight ball control.",
-    thumbnail: "/videos/session_2_ticktocks-thumbnail.jpg",
-    unlockXP: 0,
-  },
-  session_3_ticktockstops: {
-    title: "Skill Session 3: Tick Tock Stops",
-    video: "/videos/session_3_ticktockstops.mp4",
-    description: "Master control transitions with this stop-and-go variation of tick tocks.",
-    thumbnail: "/videos/session_3_ticktockstops-thumbnail.jpg",
-    unlockXP: 200,
-  },
-  session_4_outsidetakestop: {
-    title: "Skill Session 4: Outside Take Stop",
-    video: "/videos/session_4_outside-take-stop.mp4",
-    description: "Take the ball with the outside of the foot, then stop it quickly.",
-    thumbnail: "/videos/session_4_outside-take-stop.jpg",
-    unlockXP: 300,
-  },
-  session_5_ticktocksoleroll: {
-    title: "Skill Session 5: Tick Tock Sole Roll",
-    video: "/videos/session_5_tick-tock-sole-roll.mp4",
-    description: "Sole roll added to tick tocks for advanced ball movement.",
-    thumbnail: "/videos/session_5_tick-tock-sole-roll.jpg",
-    unlockXP: 400,
-  },
-  session_6_ticktockoutsidein: {
-    title: "Skill Session 6: Tick Tock Outside-In",
-    video: "/videos/session_6_tick-tock-outside-in.mp4",
-    description: "Use outside-in touches to build variation into your tick tocks.",
-    thumbnail: "/videos/session_6_tick-tock-outside-in.jpg",
-    unlockXP: 500,
-  },
-};
+import { sessionData } from "../lib/sessionData";
 
 export default function SkillSession() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const sessionKey = searchParams.get("session") || "session_1_toetaps";
   const session = sessionData[sessionKey];
+  const defaultPoster = sessionData["session_1_toetaps"]?.thumbnail;
 
   const [player, setPlayer] = useState(null);
   const [points, setPoints] = useState(0);
@@ -68,6 +25,8 @@ export default function SkillSession() {
   const intervalRef = useRef(null);
   const XP_GOAL = 100;
   const XP_MULTIPLIER = 1;
+
+  const estimatedXp = reps * time * XP_MULTIPLIER;
 
   useEffect(() => {
     const fetchPlayer = async () => {
@@ -184,7 +143,12 @@ export default function SkillSession() {
       )}
 
       <h2 style={{ textAlign: "center", color: "#38bdf8" }}>{session?.title}</h2>
-      <video width="100%" controls style={{ borderRadius: "10px", marginBottom: "8px" }}>
+      <video
+        width="100%"
+        controls
+        poster={session?.thumbnail || defaultPoster}
+        style={{ borderRadius: "10px", marginBottom: "8px" }}
+      >
         <source src={session?.video} type="video/mp4" />
         Your browser does not support the video tag.
       </video>
@@ -204,6 +168,11 @@ export default function SkillSession() {
           <input type="number" value={rest} onChange={(e) => setRest(parseInt(e.target.value) || 0)} style={inputStyle} />
         </div>
       </div>
+
+      {/* ✅ XP Preview Line */}
+      <p style={{ textAlign: "center", marginTop: "1rem", color: "#7dd3fc", fontWeight: "bold" }}>
+        You will earn: {estimatedXp} XP
+      </p>
 
       <h2 style={{ fontSize: "48px", textAlign: "center", margin: "20px 0" }}>{countdown}s</h2>
       <div style={{ display: "flex", gap: "1rem", justifyContent: "center", marginBottom: "2rem" }}>
@@ -260,4 +229,3 @@ const buttonStyle = (color) => ({
   fontSize: "16px",
   cursor: "pointer"
 });
-

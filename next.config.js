@@ -2,8 +2,8 @@
 module.exports = {
   images: {
     domains: [
-      'flagcdn.com',
-      'uitlajpnqruvvykrcyyg.supabase.co', // ✅ your Supabase storage
+      'flagcdn.com', // for country flags
+      'uitlajpnqruvvykrcyyg.supabase.co', // your real Supabase Storage domain
     ],
   },
-};
+}

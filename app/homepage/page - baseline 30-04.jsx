@@ -162,14 +162,11 @@ export default function Homepage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10 max-w-2xl mx-auto">
-          <Link href="/skill-session" className={`${buttonBase} bg-gradient-to-br from-[#222831] to-[#393e46] hover:scale-105 p-4 sm:p-6 rounded-xl shadow-xl text-center font-bold text-lg sm:text-xl cursor-pointer border border-blue-600 hover:shadow-glow`}>
+          <Link href="/skill-session" className={`${buttonBase} bg-blue-600 text-white px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base rounded-lg shadow text-center hover:bg-blue-700`}>
             ⚽ Start Skill Session
           </Link>
-          <Link href="/player-dashboard" className={`${buttonBase} bg-gradient-to-br from-[#222831] to-[#393e46] hover:scale-105 p-4 sm:p-6 rounded-xl shadow-xl text-center font-bold text-lg sm:text-xl cursor-pointer border border-blue-600 hover:shadow-glow`}>
+          <Link href="/player-dashboard" className={`${buttonBase} bg-green-600 text-white px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base rounded-lg shadow text-center hover:bg-green-700`}>
             📊 Player Dashboard
-          </Link> 
-          <Link href="/workout-builder" className={`${buttonBase} bg-gradient-to-br from-[#222831] to-[#393e46] hover:scale-105 p-4 sm:p-6 rounded-xl shadow-xl text-center font-bold text-lg sm:text-xl cursor-pointer border border-blue-600 hover:shadow-glow`}>
-            🏋️ Workout Builder
           </Link>
         </div>
 
