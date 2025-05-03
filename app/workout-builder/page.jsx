@@ -259,15 +259,8 @@ export default function WorkoutBuilder() {
       </div>
 
       {current && (
-        <div className="relative w-full">
-          <video
-            ref={videoRef}
-            loop={mode === "work"}
-            controls
-            muted
-            poster={current.thumbnail}
-            className="rounded-xl mb-4 w-full max-w-full h-auto"
-          >
+        <div className="relative w-full flex flex-col items-center">
+          <video ref={videoRef} loop={mode === "work"} controls muted playsInline poster={current.thumbnail} className="rounded-xl mb-4 w-full max-w-full h-auto">
             <source src={current.video} type="video/mp4" />
           </video>
 
@@ -284,9 +277,11 @@ export default function WorkoutBuilder() {
               ? `Now: ${current.title} (Rep ${currentRep} of ${current.reps})`
               : "Rest"}
           </h4>
-          <p className="text-3xl">{countdown}s</p>
+          {countdown !== null && countdown !== undefined && (
+            <p className="text-3xl">{countdown}s</p>
+          )}
           {workout[currentIndex + 1] && currentRep === current.reps && (
-            <p className="text-slate-400">Next: {workout[currentIndex + 1].title}</p>
+            <p className="text-slate-400">Next: {workout[currentIndex + 1]?.title}</p>
           )}
         </div>
       )}
