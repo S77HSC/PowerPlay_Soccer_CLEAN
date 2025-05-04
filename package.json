@@ -12,6 +12,7 @@
     "bufferutil": "^4.0.9",
     "canvas-confetti": "^1.9.3",
     "chart.js": "^4.4.9",
+    "dayjs": "^1.11.13",
     "framer-motion": "^12.6.5",
     "next": "^13.5.11",
     "postcss": "^8.4.21",

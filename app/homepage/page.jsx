@@ -238,7 +238,7 @@ export default function Homepage() {
             <p className="text-xs text-indigo-300 mt-1">Check your global rank</p>
           </div>
 
-          <div className="bg-[#2d1f07] border border-yellow-600 p-5 rounded-2xl shadow-md text-center hover:shadow-yellow-400/30 transition-shadow">
+          <div className="bg-[#1C2951] border border-cyan-600 p-5 rounded-2xl shadow-md text-center hover:shadow-cyan-400/30 transition-shadow">
             <Link href="/workout-builder" className="block font-semibold text-white text-lg">
               🏋️ Workout Builder
             </Link>
@@ -253,7 +253,7 @@ export default function Homepage() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
           <Link href="/sacrifice-league/new">
             <div className="bg-[#222831] border border-blue-600 p-5 rounded-2xl shadow-md text-center hover:shadow-blue-400/30 transition-shadow">
-              <Image src="/tournament-sparkle.png" alt="Tournament Manager Logo" width={80} height={80} className="mx-auto mb-3" />
+              <Image src="/tournament-sparkle.png" alt="Tournament Manager Logo" width={90} height={90} className="mx-auto mb-3" />
               <h4 className="font-semibold text-white text-lg">Power League</h4>
               <p className="text-sm text-gray-300 mt-1">Tournament creator.</p>
             </div>
@@ -261,7 +261,7 @@ export default function Homepage() {
 
           <Link href="/survivor_mode">
             <div className="bg-[#2d2d2d] border border-red-600 p-5 rounded-2xl shadow-md text-center hover:shadow-red-400/30 transition-shadow">
-              <Image src="/sacrifice_logo.png" alt="Survivor Mode Logo" width={80} height={80} className="mx-auto mb-3" />
+              <Image src="/sacrifice_logo.png" alt="Survivor Mode Logo" width={90} height={90} className="mx-auto mb-3" />
               <h4 className="font-semibold text-white text-lg">Survivor Mode</h4>
               <p className="text-sm text-gray-300 mt-1">Score and survive!</p>
             </div>
@@ -269,7 +269,7 @@ export default function Homepage() {
 
           <Link href="/powerplay">
             <div className="bg-[#141e30] border border-green-600 p-5 rounded-2xl shadow-md text-center hover:shadow-green-400/30 transition-shadow">
-              <Image src="/powerplay-logo.png" alt="PowerPlay Logo" width={80} height={80} className="mx-auto mb-3" />
+              <Image src="/powerplay-logo.png" alt="PowerPlay Logo" width={90} height={90} className="mx-auto mb-3" />
               <h4 className="font-semibold text-white text-lg">PowerPlay</h4>
               <p className="text-sm text-gray-300 mt-1">Build. Compete. Dominate.</p>
             </div>

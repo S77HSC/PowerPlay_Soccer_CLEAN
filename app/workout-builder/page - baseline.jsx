@@ -261,7 +261,6 @@ export default function WorkoutBuilder() {
   
 
   return (
-     <div>
     <div className="p-4 bg-slate-900 text-white min-h-screen">
       {showMotionWarnings && mode === "work" && isRunning && !motionDetected && (
         <div className="bg-yellow-500 text-black p-3 rounded-lg text-center mb-4">
@@ -275,13 +274,11 @@ export default function WorkoutBuilder() {
         </div>
       )}
 
-<div className="p-4 bg-slate-900 text-white min-h-screen">
-      <div className="flex flex-col items-center mb-4">
-        <img src="/powerplay-sessionbuilder-logo.png" alt="Session Builder Logo" className="h-30 w-auto" />
-        <p className="mt-2 text-sm tracking-widest text-slate-400 uppercase">Train. Improve. Master.</p>
-      </div>
+      <div className="flex justify-center mb-4">
+  <img src="/powerplay-logo.png" alt="PowerPlay Logo" className="h-20 w-auto" />
+</div>
 
-<h2 className="text-3xl font-bold text-sky-400 mb-6 text-center">Workout Builder</h2>
+<h2 className="text-3xl font-bold text-sky-400 mb-6 text-center">🏋️ Workout Builder</h2>
 
 <div className="mb-6 flex justify-center">
   <div className="inline-flex rounded-full bg-slate-800 p-1 space-x-1">
@@ -417,8 +414,8 @@ export default function WorkoutBuilder() {
 
       <audio ref={whistleStart} src="/sounds/whistle-start.mp3" preload="auto" />
       <audio ref={whistleStop} src="/sounds/whistle-stop.mp3" preload="auto" />
-          </div>
+      
+          
     </div>
-  </div>
-);
+  );
 }
