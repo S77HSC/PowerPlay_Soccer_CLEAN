@@ -77,11 +77,12 @@ export default function PlayerProfile() {
     }
 
     if (!groupedData[key]) {
-      groupedData[key] = { xp: 0, workouts: 0 };
+      groupedData[key] = { xp: 0, workouts: 0, touches: 0 };
     }
 
     groupedData[key].xp += session.xr_awarded || 0;
     groupedData[key].workouts += 1;
+    groupedData[key].touches += session.touches || 0;
   });
 
   const labels = Object.keys(groupedData);
@@ -101,6 +102,11 @@ export default function PlayerProfile() {
         data: workoutCounts,
         backgroundColor: "#4ade80",
       },
+      {
+        label: "Touches",
+        data: touchCounts,
+        backgroundColor: "#38bdf8",
+      }
     ],
   };
 
@@ -147,6 +153,7 @@ export default function PlayerProfile() {
           🚀 Start Next Session
         </a>
       </div>
+	<PlayerDashboard player={player} sessions={sessions} />
     </div>
   );
 }

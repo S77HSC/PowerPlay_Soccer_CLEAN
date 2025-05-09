@@ -1,8 +1,14 @@
+"use client";
+
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import confetti from "canvas-confetti";
+import axios from "axios";
 import { useSearchParams, useRouter } from "next/navigation";
 import { sessionData } from "../lib/sessionData";
+import dynamic from "next/dynamic";
+
+const WebcamDetection = dynamic(() => import("./WebcamDetection"), { ssr: false });
 
 export default function SkillSession() {
   const searchParams = useSearchParams();
@@ -20,6 +26,7 @@ export default function SkillSession() {
   const [isRunning, setIsRunning] = useState(false);
   const [isResting, setIsResting] = useState(false);
   const [currentRep, setCurrentRep] = useState(0);
+  const [touchCount, setTouchCount] = useState(0);
   const [showXpModal, setShowXpModal] = useState(false);
   const [xpEarned, setXpEarned] = useState(0);
   const intervalRef = useRef(null);
@@ -51,14 +58,21 @@ export default function SkillSession() {
       clearInterval(intervalRef.current);
       if (isRunning && countdown === 0) {
         if (isResting) {
-          setCountdown(time);
+          setTouchCount(0);
+    resetBackendTouches();
+        resetBackendTouches();
+        setCountdown(time);
           setIsResting(false);
+    setTouchCount(0);
+    resetBackendTouches();
         } else {
           if (currentRep + 1 >= reps) {
             new Audio("/session-complete.mp3").play().catch(() => {});
             handleXpUpdate();
             setIsRunning(false);
             setIsResting(false);
+    setTouchCount(0);
+    resetBackendTouches();
             setCurrentRep(0);
           } else {
             new Audio("/rest-now.mp3").play().catch(() => {});
@@ -77,15 +91,34 @@ export default function SkillSession() {
       setTimeout(() => {
         setCurrentRep(0);
         setIsResting(false);
+    setTouchCount(0);
+    resetBackendTouches();
+        setTouchCount(0);
+    resetBackendTouches();
+        resetBackendTouches();
         setCountdown(time);
         setIsRunning(true);
       }, 3000);
     }).catch(() => {
       setCurrentRep(0);
       setIsResting(false);
-      setCountdown(time);
+    setTouchCount(0);
+    resetBackendTouches();
+      setTouchCount(0);
+    resetBackendTouches();
+        resetBackendTouches();
+        setCountdown(time);
       setIsRunning(true);
     });
+  };
+
+  
+  const resetBackendTouches = async () => {
+    try {
+      await axios.post("http://localhost:8000/reset-touches/");
+    } catch (err) {
+      console.error("Failed to reset backend touches:", err.message);
+    }
   };
 
   const handleXpUpdate = async () => {
@@ -103,7 +136,8 @@ export default function SkillSession() {
         reps,
         work_time: time,
         rest_time: rest,
-        skill_name: sessionKey
+        skill_name: sessionKey,
+        touches: touchCount
       }]);
 
       await supabase.from("players").update({ points: newPoints }).eq("id", player.id);
@@ -115,7 +149,7 @@ export default function SkillSession() {
   };
 
   const handleSessionSelect = (key) => {
-    router.push(`/skill-session?session=${key}`);
+    router.push(`/skills-session?session=${key}`);
   };
 
   return (
@@ -143,15 +177,21 @@ export default function SkillSession() {
       )}
 
       <h2 style={{ textAlign: "center", color: "#38bdf8" }}>{session?.title}</h2>
-      <video
-        width="100%"
-        controls
-        poster={session?.thumbnail || defaultPoster}
-        style={{ borderRadius: "10px", marginBottom: "8px" }}
-      >
-        <source src={session?.video} type="video/mp4" />
-        Your browser does not support the video tag.
-      </video>
+      <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start', justifyContent: 'center', marginTop: '2rem' }}>
+  {/* Skill demo video */}
+  <video
+    width="640"
+    controls
+    poster={session?.thumbnail || defaultPoster}
+    style={{ borderRadius: "10px", marginBottom: "8px" }}
+  >
+    <source src={session?.video} type="video/mp4" />
+    Your browser does not support the video tag.
+  </video>
+
+  {/* Detection feed only during active time */}
+  {isRunning && !isResting && <WebcamDetection onTouchDetected={() => setTouchCount((prev) => prev + 1)} />}
+</div>
       <p style={{ fontSize: "14px", color: "#ddd", textAlign: "center" }}>{session?.description}</p>
 
       <div style={{ textAlign: "left", maxWidth: "300px", margin: "0 auto", marginTop: "1rem" }}>
@@ -169,19 +209,24 @@ export default function SkillSession() {
         </div>
       </div>
 
-      {/* ✅ XP Preview Line */}
       <p style={{ textAlign: "center", marginTop: "1rem", color: "#7dd3fc", fontWeight: "bold" }}>
         You will earn: {estimatedXp} XP
       </p>
 
       <h2 style={{ fontSize: "48px", textAlign: "center", margin: "20px 0" }}>{countdown}s</h2>
+<p style={{ textAlign: "center", color: "#38bdf8", fontSize: "20px" }}>
+  Touches: {touchCount}
+</p>
+
       <div style={{ display: "flex", gap: "1rem", justifyContent: "center", marginBottom: "2rem" }}>
         <button onClick={startTimer} style={buttonStyle("green")}>Start</button>
         <button onClick={() => setIsRunning(false)} style={buttonStyle("red")}>Stop</button>
-        <button onClick={() => { setCountdown(0); setCurrentRep(0); setIsResting(false); }} style={buttonStyle("blue")}>Reset</button>
+        <button onClick={() => { setCountdown(0); setCurrentRep(0); setIsResting(false);
+    setTouchCount(0);
+    resetBackendTouches(); }} style={buttonStyle("blue")}>Reset</button>
       </div>
 
-      <p style={{ textAlign: "center" }}>Level {Math.floor(points / XP_GOAL)}</p>
+           <p style={{ textAlign: "center" }}>Level {Math.floor(points / XP_GOAL)}</p>
       <p style={{ textAlign: "center" }}>{points % XP_GOAL} / {XP_GOAL} XP</p>
       <div style={{ height: "16px", backgroundColor: "#333", borderRadius: "8px", overflow: "hidden", width: "300px", margin: "0 auto", boxShadow: "0 0 8px #00b4d8" }}>
         <div style={{ height: "100%", width: `${(points % XP_GOAL / XP_GOAL) * 100}%`, background: "linear-gradient(90deg, #00b4d8, #0077b6)", transition: "width 0.5s ease", borderRadius: "999px" }}></div>

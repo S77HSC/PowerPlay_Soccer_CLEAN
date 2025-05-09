@@ -50,7 +50,7 @@ export async function updateWorkoutCount(playerName) {
 export async function fetchWorkoutHistory(authId) {
   const { data, error } = await supabase
     .from("workout_sessions")
-    .select("completed_at, xp_awarded")
+    .select("completed_at, xp_awarded, touches")
     .eq("auth_id", authId)
     .order("completed_at", { ascending: true });
 
@@ -63,6 +63,7 @@ export async function fetchWorkoutHistory(authId) {
     data: data.map((session) => ({
       timestamp: session.completed_at,
       xp: session.xp_awarded,
+      touches: session.touches || 0,
     })),
     error: null,
   };

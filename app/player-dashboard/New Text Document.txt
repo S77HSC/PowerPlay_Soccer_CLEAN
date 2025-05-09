@@ -1,0 +1,143 @@
+"use client";
+
+import React, { useEffect, useState } from "react";
+import { Bar } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  BarElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+} from "chart.js";
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  LineElement,
+  PointElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+);
+
+export default function PlayerDashboard({ player, sessions }) {
+  const [chartData, setChartData] = useState(null);
+  const sessionData = Array.isArray(sessions) ? sessions : [];
+
+  useEffect(() => {
+    if (!sessionData || sessionData.length === 0) return;
+
+    const grouped = {};
+    sessionData.forEach(session => {
+      const date = new Date(session.completed_at).toISOString().split("T")[0];
+      if (!grouped[date]) grouped[date] = { xp: 0, workouts: 0, touches: 0 };
+      grouped[date].xp += session.xr_awarded || 0;
+      grouped[date].workouts += 1;
+      grouped[date].touches += session.touches || 0;
+    });
+
+    const labels = Object.keys(grouped);
+    const xpValues = labels.map(date => grouped[date].xp);
+    const workouts = labels.map(date => grouped[date].workouts);
+    const touches = labels.map(date => grouped[date].touches);
+
+    setChartData({ labels, xpValues, workouts, touches });
+  }, [sessionData]);
+
+  if (!chartData) {
+    return <div className="text-white text-center mt-10">Loading chart... Waiting for data...</div>;
+  }
+
+  const totalXP = sessionData.reduce((sum, s) => sum + (s.xr_awarded || 0), 0);
+  const totalTouches = sessionData.reduce((sum, s) => sum + (s.touches || 0), 0);
+  const totalWorkouts = sessionData.length;
+  const totalTime = sessionData.reduce((sum, s) => sum + ((s.work_time || 0) * (s.reps || 0)), 0) / 60;
+
+  return (
+    <div className="min-h-screen bg-[#0A0F24] text-white px-6 py-10 font-sans">
+      <div className="max-w-6xl mx-auto space-y-10">
+        <div className="bg-gradient-to-r from-cyan-700 to-blue-800 p-6 rounded-2xl shadow flex flex-col md:flex-row items-center justify-between">
+          <div className="flex items-center gap-4">
+            <img
+              src={player?.avatar_url || "/default-avatar.png"}
+              className="w-20 h-20 rounded-full border-4 border-white object-cover"
+              alt="Player Avatar"
+            />
+            <div>
+              <h1 className="text-2xl font-bold">{player?.name}</h1>
+              <p className="text-sm text-blue-100">{player?.country}</p>
+            </div>
+          </div>
+          <div className="mt-4 md:mt-0 text-sm text-white/80">
+            Last session: {sessionData[sessionData.length - 1]?.completed_at?.split('T')[0]}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <StatCard label="XP" value={totalXP} color="text-yellow-300" />
+          <StatCard label="Workouts" value={totalWorkouts} color="text-green-400" />
+          <StatCard label="Touches" value={totalTouches} color="text-cyan-300" />
+          <StatCard label="Time (min)" value={totalTime.toFixed(1)} color="text-purple-300" />
+        </div>
+
+        <div className="bg-gray-900 p-6 rounded-xl shadow-lg">
+          <h2 className="text-xl font-semibold mb-4 text-cyan-300">📈 XP & Touches Over Time</h2>
+          <Bar data={{
+            labels: chartData.labels,
+            datasets: [
+              {
+                label: "XP Gained",
+                data: chartData.xpValues,
+                backgroundColor: "#facc15",
+              },
+              {
+                label: "Touches",
+                data: chartData.touches,
+                backgroundColor: "#38bdf8",
+                type: "line",
+                borderColor: "#38bdf8",
+                tension: 0.4,
+                pointRadius: 4,
+                fill: false
+              }
+            ]
+          }}
+          options={{
+            responsive: true,
+            plugins: {
+              legend: { position: "top" },
+              title: { display: false }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: { color: "#fff" },
+                grid: { color: "#334155" }
+              },
+              x: {
+                ticks: { color: "#fff" },
+                grid: { color: "#334155" }
+              }
+            }
+          }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StatCard({ label, value, color }) {
+  return (
+    <div className="bg-gray-800 p-4 rounded-xl text-center shadow-md">
+      <h4 className={`text-sm font-medium ${color}`}>{label}</h4>
+      <p className="text-2xl font-bold mt-1">{value}</p>
+    </div>
+  );
+}
