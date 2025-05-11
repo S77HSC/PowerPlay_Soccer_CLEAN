@@ -1,92 +1,92 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
-import axios from 'axios';
 
-export default function WebcamDetection({ onTouchDetected }) {
+import { useEffect, useRef, useState } from 'react';
+
+export default function WebcamDetection() {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
-  const [touches, setTouches] = useState(0);
-  const lastTouchesRef = useRef(0);
+  const [cameraStarted, setCameraStarted] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
-  useEffect(() => {
-    navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
+  const isIOS = typeof navigator !== 'undefined' && /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' } },
+        audio: false,
+      });
+
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        setCameraStarted(true);
+        console.log('✅ Camera started successfully');
       }
-    });
-
-    const interval = setInterval(() => {
-      captureFrame();
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, []);
+    } catch (err) {
+      console.error('🚫 Camera error:', err);
+      setErrorMsg('Unable to access camera. Please allow permissions or try another browser.');
+    }
+  };
 
   const captureFrame = async () => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    if (!canvas || !video) return;
+
+    if (!video || !canvas || video.readyState < 2) return;
 
     const ctx = canvas.getContext('2d');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    canvas.toBlob(async (blob) => {
-      if (!blob) return;
+    const imageData = canvas.toDataURL('image/jpeg');
 
-      try {
-        const formData = new FormData();
-        formData.append('file', blob, 'frame.jpg');
-
-        const res = await axios.post('http://localhost:8000/detect-football/', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
-
-        const newTouches = res.data.touches || 0;
-
-        if (newTouches > lastTouchesRef.current) {
-          if (onTouchDetected) {
-            onTouchDetected();
-          }
-        }
-
-        lastTouchesRef.current = newTouches;
-        setTouches(newTouches);
-      } catch (error) {
-        console.error('Detection request failed:', error.message);
-      }
-    }, 'image/jpeg');
-  };
-
-  const resetTouches = async () => {
     try {
-      await axios.post('http://localhost:8000/reset-touches/');
-      setTouches(0);
+      const response = await fetch('/api/detect-frame', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: imageData }),
+      });
+      const result = await response.json();
+      console.log('📸 Frame sent. Detection result:', result);
     } catch (error) {
-      console.error('Failed to reset touches:', error.message);
+      console.error('📉 Frame detection error:', error);
     }
   };
 
+  useEffect(() => {
+    if (!isIOS) {
+      startCamera();
+      const interval = setInterval(captureFrame, 1000);
+      return () => clearInterval(interval);
+    }
+  }, []);
+
   return (
-    <div style={{ width: 320, textAlign: 'center', fontSize: '16px' }}>
+    <div className="relative w-full max-w-md mx-auto text-white">
       <video
         ref={videoRef}
-        width="320"
-        height="240"
         autoPlay
-        muted
         playsInline
-        style={{ borderRadius: '8px', marginBottom: '0.5rem' }}
+        muted
+        className="w-full h-auto rounded-md border border-white/20"
       />
-      <canvas ref={canvasRef} width="320" height="240" style={{ display: 'none' }} />
-      <div>
-        <strong>Touches:</strong> {touches}
-      </div>
-      <button
-        onClick={resetTouches}
-        style={{ marginTop: 8, padding: '6px 12px', fontSize: '14px', cursor: 'pointer' }}
-      >
-        Reset Touches
-      </button>
+      <canvas ref={canvasRef} className="hidden" />
+
+      {isIOS && !cameraStarted && (
+        <div className="text-center mt-4">
+          <button
+            onClick={startCamera}
+            className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded shadow"
+          >
+            📷 Start Camera
+          </button>
+        </div>
+      )}
+
+      {errorMsg && (
+        <div className="mt-4 text-sm text-red-400 text-center">{errorMsg}</div>
+      )}
     </div>
   );
 }

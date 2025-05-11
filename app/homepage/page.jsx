@@ -111,7 +111,6 @@ export default function Homepage() {
 
       setStreak(streakCount);
 
-      // Grant XP reward for completing today's challenge if not yet rewarded
       const rewardKey = new Date().toISOString().split('T')[0];
       if (completedToday && player.last_daily_reward !== rewardKey) {
         const updatedXP = player.points + 50;
@@ -131,150 +130,127 @@ export default function Homepage() {
   const getCountryFlag = (countryName) => {
     if (!countryName) return null;
     const code = {
-      'United Kingdom': 'gb',
-      England: 'gb',
-      Scotland: 'gb',
-      Wales: 'gb',
-      USA: 'us',
-      'United States': 'us',
-      Spain: 'es',
-      'South Korea': 'kr',
+      'United Kingdom': 'gb', England: 'gb', Scotland: 'gb', Wales: 'gb',
+      USA: 'us', 'United States': 'us', Spain: 'es', 'South Korea': 'kr',
     }[countryName] || countryName.toLowerCase().slice(0, 2);
     return `https://flagcdn.com/w40/${code}.png`;
   };
 
-  const buttonBase = "w-full sm:w-auto transition-transform duration-200 active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-2";
-
   return (
-  <main className="px-4 sm:px-6 lg:px-8 pt-8 space-y-6">
-    <div className="max-w-4xl mx-auto flex justify-between items-center mb-4">
-      <Image src="/powerplay-logo.png" alt="PowerPlay Logo" width={100} height={100} />
-      <div className="flex gap-4">
-        <Link href="/settings" className="text-cyan-300 hover:underline">⚙️ Settings</Link>
-        <Link href="/logout" className="text-orange-400 hover:underline">📕 Logout</Link>
-      </div>
-    </div>
-  <div className="max-w-4xl mx-auto bg-gradient-to-r from-[#1f2937] to-[#111827] border border-blue-700 p-4 rounded-lg shadow-lg">
-    <div className="flex items-center gap-4">
-      {player && (
+    <main className="relative min-h-screen bg-gradient-to-br from-[#0a0f19] via-[#111827] to-[#0a0f19] text-white px-4 py-8 font-sans overflow-hidden">
+      <div
+  className="absolute inset-0 z-0 opacity-30 bg-cover bg-cover sm:bg-[length:100%_100%] bg-no-repeat bg-center pointer-events-none"
+  style={{ backgroundImage: "url('/images/futuristic-football-bg.jpg')" }}
+></div>
+      <div className="relative z-10">
+      <div className="max-w-7xl mx-auto space-y-12">
+        <header className="relative grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+    <Image src="/powerplay-logo.png" alt="PowerPlay Logo" width={100} height={100} priority style={{ height: 'auto' }} />
+    {player && (
+      <div className="flex flex-wrap items-center gap-4">
         <Image
           src={player.avatar_url?.startsWith('http')
             ? player.avatar_url
             : `https://uitlajpnqruvvykrcyyg.supabase.co/storage/v1/object/public/avatars/${player.avatar_url}`}
           alt="Avatar"
-          width={60}
-          height={60}
-          className="object-cover aspect-square rounded-full border-2 border-cyan-500"
+          width={48}
+          height={48}
+          className="rounded-full border border-white/30 shadow-lg w-14 h-14 object-cover"
         />
-      )}
-      <div>
-        <h2 className="text-lg font-bold text-white drop-shadow">{player?.name ?? '...'}</h2>
-        <p className="text-xs text-blue-300">
-          {player?.country && (
-            <>
-              <Image
-                src={getCountryFlag(player.country)}
-                alt={player.country}
-                width={24}
-                height={16}
-                style={{ height: 'auto' }}
-                className="inline-block mr-2"
-              />
-              {player.country}
-            </>
-          )}
-          <span className="ml-2">🌍 Rank: {rank != null ? `#${rank}` : '...'}</span>
-        </p>
-      </div>
-    </div>
-    {player && (
-      <div className="mt-4 w-full">
-        <label className="block text-xs uppercase text-gray-400 mb-1">XP Progress</label>
-        <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600 transition-all duration-700 animate-pulse"
-            style={{ width: `${Math.min((player.points % 1000) / 10, 100)}%` }}
-          ></div>
+        <div>
+          <p className="text-sm font-semibold flex items-center gap-2">
+  {player.name}
+  {player.country && (
+    <Image
+      src={getCountryFlag(player.country)}
+      alt={player.country}
+      width={20}
+      height={14}
+      className="inline-block"
+    />
+  )}
+  {rank && <span className="text-xs text-sky-400 ml-2">Global Rank #{rank}</span>}
+</p>
+          <div className="w-32 h-2 bg-gray-700 rounded-full mt-1">
+            <div
+              className="h-full bg-gradient-to-r from-yellow-400 to-pink-500 rounded-full animate-pulse"
+              style={{ width: `${Math.min((((player?.points ?? 0) % 1000) / 10), 100)}%` }}
+            ></div>
+          </div>
+          <p className="text-xs text-right text-gray-400">{player.points ?? 0} XP</p>
         </div>
-        <p className="text-xs text-right text-gray-400 mt-1 animate-pulse">{player.points ?? 0} XP</p>
       </div>
     )}
   </div>
-      
-    
+  <div className="absolute top-2 right-2 z-20 flex gap-3 md:gap-4 md:static md:justify-end md:flex-row md:items-center">
+  <Link href="/user-settings" className="text-cyan-400 hover:text-cyan-200">⚙️ Settings</Link>
+  <Link href="/logout" className="text-orange-400 hover:text-orange-200">📕 Logout</Link>
+</div>
+</header>
 
-
-        <div className="h-4 sm:h-6"></div>
-
-        
-        <Link href="/skill-session">
-  <div className="bg-[#1b223b] border border-blue-700 ring-2 ring-blue-500 ring-offset-2 p-6 rounded-2xl shadow-md hover:shadow-lg hover:ring-2 hover:ring-blue-400 transition-all duration-300 cursor-pointer text-center space-y-2 animate-fade-in">
-    <h3 className="text-xl font-extrabold text-orange-400 tracking-wide animate-pulse">🔥 Daily Challenge</h3>
-    <p className="text-blue-200 text-base font-medium">Complete <strong>2 Skill Sessions</strong> today</p>
-    <p className="text-blue-200 text-base font-medium">to keep your streak alive! 🔁</p>
-    {streak === 2 && <p className="text-base text-blue-400 font-semibold animate-pulse">✨ Getting Started Streak!</p>}
-    {streak >= 3 && streak < 5 && <p className="text-base text-orange-300 font-semibold animate-pulse">🥉 Bronze Streak!</p>}
-    {streak >= 5 && streak < 7 && <p className="text-base text-gray-200 font-semibold animate-pulse">🥈 Silver Streak!</p>}
-    {streak >= 7 && streak < 10 && <p className="text-base text-yellow-400 font-semibold animate-pulse">🥇 Gold Streak!</p>}
-    {streak >= 10 && streak < 14 && <p className="text-base text-green-400 font-semibold animate-pulse">🟢 Emerald Streak!</p>}
-    {streak >= 14 && streak < 21 && <p className="text-base text-purple-400 font-semibold animate-pulse">🟪 Platinum Streak!</p>}
-    {streak >= 21 && <p className="text-base text-pink-400 font-semibold animate-pulse">🌟 Legendary Streak!</p>}
-    <p className="text-base text-orange-300 font-bold">🔥 {streak}-day streak {dailyComplete ? '✅' : '⏳'}</p>
+        <section className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+          <Link href="/skill-session" className="bg-white/5 backdrop-blur-md p-6 rounded-xl shadow-md border border-white/10 hover:shadow-lg hover:scale-[1.03] transition duration-300 ease-out hover:outline hover:outline-1 hover:outline-sky-300">
+  <h3 className="text-xl font-extrabold text-orange-300 text-center mb-3">Daily Challenge</h3>
+  <div className="w-full flex justify-center mb-3">
+    <Image src="/daily-challenge-logo.png" alt="Daily Challenge" width={90} height={90} className="opacity-100" />
   </div>
+  <p className="text-sm text-blue-200 text-center">Streak: {streak} {dailyComplete ? '✅' : '⏳'}</p>
 </Link>
 
-        <div className="w-full max-w-md mx-auto grid gap-6">
-          <div className="bg-[#111e2e] border border-cyan-600 p-5 rounded-2xl shadow-md text-center hover:shadow-cyan-500/30 transition-shadow">
-            <Link href="/skill-session" className="block font-semibold text-white text-lg">
-              ⚽ Start Skill Session
-            </Link>
-            <p className="text-xs text-cyan-300 mt-1">Practice a quick skill</p>
-          </div>
+          <Link href="/player-dashboard" className="bg-white/5 backdrop-blur-md p-6 rounded-xl shadow-md border border-white/10 hover:shadow-lg hover:scale-[1.03] transition duration-300 ease-out hover:outline hover:outline-1 hover:outline-sky-300">
+  <h3 className="text-xl font-extrabold text-indigo-300 text-center mb-3">Player Dashboard</h3>
+  <div className="w-full flex justify-center mb-3">
+    <Image src="/dashboard-logo.png" alt="Player Dashboard" width={90} height={90} className="opacity-100" />
+  </div>
+  <p className="text-sm text-indigo-200 text-center">Track your global progress</p>
+</Link>
 
-          <div className="bg-[#191937] border border-indigo-600 p-5 rounded-2xl shadow-md text-center hover:shadow-indigo-500/30 transition-shadow">
-            <Link href="/player-dashboard" className="block font-semibold text-white text-lg">
-              📊 Player Dashboard
-            </Link>
-            <p className="text-xs text-indigo-300 mt-1">Check your global rank</p>
-          </div>
+          <Link href="/workout-builder" className="bg-white/5 backdrop-blur-md p-6 rounded-xl shadow-md border border-white/10 hover:shadow-lg hover:scale-[1.03] transition duration-300 ease-out hover:outline hover:outline-1 hover:outline-sky-300">
+  <h3 className="text-xl font-extrabold text-green-300 text-center mb-3">Workout Builder</h3>
+  <div className="w-full flex justify-center mb-3">
+    <Image src="/powerplay-sessionbuilder-logo.png" alt="Workout Builder" width={90} height={90} className="opacity-100" />
+  </div>
+  <p className="text-sm text-green-200 text-center">Create a custom routine</p>
+</Link>
 
-          <div className="bg-[#1C2951] border border-cyan-600 p-5 rounded-2xl shadow-md text-center hover:shadow-cyan-400/30 transition-shadow">
-            <Link href="/workout-builder" className="block font-semibold text-white text-lg">
-              🏋️ Workout Builder
-            </Link>
-            <p className="text-xs text-yellow-300 mt-1">Create a custom workout</p>
-          </div>
-        </div>
+          <Link href="/sacrifice-league/new" className="bg-white/5 backdrop-blur-md p-6 rounded-xl shadow-md border border-white/10 hover:shadow-lg hover:scale-[1.03] transition duration-300 ease-out hover:outline hover:outline-1 hover:outline-sky-300">
+  <h3 className="text-xl font-extrabold text-yellow-300 text-center mb-3">Power League</h3>
+  <div className="w-full flex justify-center mb-3">
+    <Image src="/tournament-sparkle.png" alt="Power League" width={90} height={90} className="opacity-100" />
+  </div>
+  <p className="text-sm text-yellow-200 text-center">Tournament creator</p>
+</Link>
 
-        <div className="rounded-2xl border border-blue-700 shadow-md p-5 bg-[#111827]">
+          <Link href="/survivor_mode" className="bg-white/5 backdrop-blur-md p-6 rounded-xl shadow-md border border-white/10 hover:shadow-lg hover:scale-[1.03] transition duration-300 ease-out hover:outline hover:outline-1 hover:outline-sky-300">
+  <h3 className="text-xl font-extrabold text-red-300 text-center mb-3">Survivor Mode</h3>
+  <div className="w-full flex justify-center mb-3">
+    <Image src="/sacrifice_logo.png" alt="Survivor Mode" width={90} height={90} className="opacity-100" />
+  </div>
+  <p className="text-sm text-red-200 text-center">Score and survive</p>
+</Link>
+
+          <Link href="/powerplay" className="bg-white/5 backdrop-blur-md p-6 rounded-xl shadow-md border border-white/10 hover:shadow-lg hover:scale-[1.03] transition duration-300 ease-out hover:outline hover:outline-1 hover:outline-sky-300">
+  <h3 className="text-xl font-extrabold text-purple-300 text-center mb-3">PowerPlay</h3>
+  <div className="w-full flex justify-center mb-3">
+    <Image src="/powerplay-logo.png" alt="PowerPlay" width={90} height={90} className="opacity-100" />
+  </div>
+  <p className="text-sm text-purple-200 text-center">Build. Compete. Dominate.</p>
+</Link>
+        <Link href="/boostball" className="bg-white/5 backdrop-blur-md p-6 rounded-xl shadow-md border border-white/10 hover:shadow-lg hover:scale-[1.03] transition duration-300 ease-out hover:outline hover:outline-1 hover:outline-sky-300">
+  <h3 className="text-xl font-extrabold text-pink-300 text-center mb-3">Boostball</h3>
+  <div className="w-full flex justify-center mb-3">
+    <Image src="/boostball_logo.png" alt="Boostball" width={90} height={90} className="opacity-100" />
+  </div>
+  <p className="text-sm text-pink-200 text-center">Fast-paced power play mode</p>
+</Link>
+        </section>
+
+        <section className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 shadow-lg">
           <LeaderboardPreviewCard players={leaders} />
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
-          <Link href="/sacrifice-league/new">
-            <div className="bg-[#222831] border border-blue-600 p-5 rounded-2xl shadow-md text-center hover:shadow-blue-400/30 transition-shadow">
-              <Image src="/tournament-sparkle.png" alt="Tournament Manager Logo" width={90} height={90} className="mx-auto mb-3" />
-              <h4 className="font-semibold text-white text-lg">Power League</h4>
-              <p className="text-sm text-gray-300 mt-1">Tournament creator.</p>
-            </div>
-          </Link>
-
-          <Link href="/survivor_mode">
-            <div className="bg-[#2d2d2d] border border-red-600 p-5 rounded-2xl shadow-md text-center hover:shadow-red-400/30 transition-shadow">
-              <Image src="/sacrifice_logo.png" alt="Survivor Mode Logo" width={90} height={90} className="mx-auto mb-3" />
-              <h4 className="font-semibold text-white text-lg">Survivor Mode</h4>
-              <p className="text-sm text-gray-300 mt-1">Score and survive!</p>
-            </div>
-          </Link>
-
-          <Link href="/powerplay">
-            <div className="bg-[#141e30] border border-green-600 p-5 rounded-2xl shadow-md text-center hover:shadow-green-400/30 transition-shadow">
-              <Image src="/powerplay-logo.png" alt="PowerPlay Logo" width={90} height={90} className="mx-auto mb-3" />
-              <h4 className="font-semibold text-white text-lg">PowerPlay</h4>
-              <p className="text-sm text-gray-300 mt-1">Build. Compete. Dominate.</p>
-            </div>
-          </Link>
-</div>
-</main>
+        </section>
+      </div>
+          </div>
+    </main>
   );
 }
