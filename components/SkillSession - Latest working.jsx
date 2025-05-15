@@ -136,7 +136,8 @@ export default function SkillSession() {
         reps,
         work_time: time,
         rest_time: rest,
-        skill_name: sessionKey
+        skill_name: sessionKey,
+        touches: touchCount
       }]);
 
       await supabase.from("players").update({ points: newPoints }).eq("id", player.id);
