@@ -1,9 +1,6 @@
 'use client';
-import { Suspense } from 'react';
-'use client';
-
-import React, { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
 import BrandHeader from '../../../components/BrandHeader';
 import Image from 'next/image';
 
@@ -139,9 +136,9 @@ function FixturesContent() {
   );
 }
 
-export default function FixturesWrapper() {
+export default function FixturesPage() {
   return (
-    <Suspense fallback={<div className='text-center py-10 text-gray-300'>Loading fixtures...</div>}>
+    <Suspense fallback={<div className="text-center py-10 text-gray-300">Loading fixtures...</div>}>
       <FixturesContent />
     </Suspense>
   );
