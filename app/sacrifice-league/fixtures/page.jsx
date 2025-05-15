@@ -1,119 +1,149 @@
 'use client';
+import { Suspense } from 'react';
+'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { generateFixtures } from '../../../powerplay-soccer/sacrifice/leagueEngine';
 import BrandHeader from '../../../components/BrandHeader';
 import Image from 'next/image';
 
-function generateCupFixtures(teams) {
-  const shuffled = [...teams].sort(() => Math.random() - 0.5);
-  const round = [];
-  for (let i = 0; i < shuffled.length; i += 2) {
-    const home = shuffled[i];
-    const away = shuffled[i + 1];
-    if (home && away) {
-      round.push({ home, away });
-    }
-  }
-  return [{ matchday: 1, fixtures: round }];
-}
-
-export default function FixturesScreen() {
+function FixturesContent TeamManager() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
   const tournamentName = searchParams.get('name') || 'Unnamed Tournament';
   const tournamentType = searchParams.get('type') || 'league';
-  const matchesPerTeam = tournamentType === 'league' ? parseInt(searchParams.get('matches'), 10) || 1 : 1;
+  const totalTeams = parseInt(searchParams.get('teams'), 10) || 4;
 
-  const [decodedTeams, setDecodedTeams] = useState([]);
-  const [teamList, setTeamList] = useState([]);
-  const [fixtures, setFixtures] = useState([]);
+  const [teamName, setTeamName] = useState('');
+  const [teams, setTeams] = useState([]);
+  const [selectedTeamIndex, setSelectedTeamIndex] = useState(null);
+  const [playerName, setPlayerName] = useState('');
 
-  useEffect(() => {
-    const encoded = searchParams.get('teams');
-    if (encoded) {
-      try {
-        const decoded = JSON.parse(decodeURIComponent(atob(encoded)));
-        setDecodedTeams(decoded);
-        setTeamList(decoded.map(t => t.name));
-      } catch (err) {
-        console.error("Failed to decode teams", err);
-      }
+  const addTeam = () => {
+    if (teamName.trim() && teams.length < totalTeams) {
+      setTeams(prev => {
+        const updated = [...prev, { name: teamName.trim(), players: [] }];
+        setSelectedTeamIndex(updated.length - 1);
+        return updated;
+      });
+      setTeamName('');
     }
-  }, [searchParams]);
+  };
 
-  useEffect(() => {
-    if (teamList.length > 1) {
-      if (tournamentType === 'league') {
-        const result = generateFixtures([...teamList], matchesPerTeam);
-        setFixtures(result);
-      } else if (tournamentType === 'cup') {
-        const result = generateCupFixtures([...teamList]);
-        setFixtures(result);
-      }
+  const addPlayerToTeam = (index) => {
+    if (playerName.trim()) {
+      const newTeams = [...teams];
+      newTeams[index].players.push({ name: playerName.trim() });
+      setTeams(newTeams);
+      setPlayerName('');
     }
-  }, [teamList, tournamentType, matchesPerTeam]);
+  };
 
-  const startTournament = () => {
-    const encodedTeams = btoa(encodeURIComponent(JSON.stringify(decodedTeams)));
-    const encodedFixtures = btoa(encodeURIComponent(JSON.stringify(fixtures)));
+  const goToFixtures = () => {
+    const encodedTeams = btoa(encodeURIComponent(JSON.stringify(teams)));
     const query = new URLSearchParams({
       name: tournamentName,
-      teams: encodedTeams,
-      fixtures: encodedFixtures
+      type: tournamentType,
+      teams: encodedTeams
     }).toString();
-    router.push(`/sacrifice-league/play?${query}`);
+    router.push(`/sacrifice-league/fixtures?${query}`);
   };
 
   return (
-    <main className="bg-gradient-to-br from-[#050A1F] to-[#0c1228] min-h-screen px-4 py-10 text-white max-w-xl mx-auto">
+    <main className="bg-gradient-to-br from-[#050A1F] to-[#0c1228] min-h-screen px-4 py-10 text-white">
       <BrandHeader />
       <div className="flex justify-center mt-4 mb-6">
-        <Image src="/tournament-sparkle.png" alt="Tournament Logo" width={80} height={80} />
+        <Image
+          src="/tournament-sparkle.png"
+          alt="Tournament Logo"
+          width={80}
+          height={80}
+        />
       </div>
 
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-red-500 text-center mb-2">Create Fixtures</h1>
-        <div className="text-center mb-4">
-          <label className="block text-sm font-medium text-gray-300 mb-1">Tournament Format</label>
-          <div className="flex justify-center gap-4">
-            <span className="bg-blue-700 text-white py-1 px-4 rounded-full text-sm capitalize">
-              {tournamentType}
-            </span>
-          </div>
-          {tournamentType === 'league' && (
-            <p className="text-sm text-gray-400 mt-2">Matches per team: {matchesPerTeam}</p>
-          )}
-        </div>
+      <h1 className="text-3xl font-bold text-red-500 mb-6 text-center">Add Teams</h1>
+      <h2 className="text-center mb-4 text-lg">{tournamentName} ({tournamentType})</h2>
+
+      <div className="flex gap-2 mb-4 max-w-md mx-auto">
+        <input
+          type="text"
+          className="flex-1 px-3 py-2 text-black rounded"
+          placeholder="Enter team name"
+          value={teamName}
+          onChange={(e) => setTeamName(e.target.value)}
+        />
+        <button
+          className="bg-red-600 hover:bg-red-700 text-white font-bold px-4 py-2 rounded"
+          onClick={addTeam}
+        >
+          Add
+        </button>
       </div>
-      <h2 className="text-center mb-4 text-lg">{tournamentName}</h2>
 
-      {fixtures.length === 0 && (
-        <p className="text-center text-gray-400">No fixtures generated. Please check team setup.</p>
-      )}
+      <ul className="mb-6 space-y-2 max-w-md mx-auto">
+        {teams.map((team, index) => (
+          <li key={index} className="bg-[#1b223b] px-4 py-2 rounded text-sm font-medium">
+            <div className="flex justify-between items-center">
+              <span>{index + 1}. {team.name}</span>
+              <button
+                onClick={() => setSelectedTeamIndex(index === selectedTeamIndex ? null : index)}
+                className="text-sm bg-gray-700 px-2 py-1 rounded hover:bg-gray-600"
+              >
+                {selectedTeamIndex === index ? 'Close' : 'Add Players'}
+              </button>
+            </div>
 
-      {fixtures.map((round, i) => (
-        <div key={i} className="mb-4 bg-[#1b223b] p-4 rounded-lg">
-          <h3 className="text-lg font-semibold mb-2">Matchday {round.matchday}</h3>
-          <ul className="space-y-1 text-sm">
-            {round.fixtures.map((match, j) => (
-              <li key={j}>{match.home} vs {match.away}</li>
-            ))}
-          </ul>
-        </div>
-      ))}
+            {selectedTeamIndex === index && (
+              <div className="mt-2 space-y-2">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Player name"
+                    value={playerName}
+                    onChange={(e) => setPlayerName(e.target.value)}
+                    className="flex-1 px-2 py-1 text-black rounded"
+                  />
+                  <button
+                    onClick={() => addPlayerToTeam(index)}
+                    className="bg-green-600 px-3 text-white rounded"
+                  >
+                    Add
+                  </button>
+                </div>
+                <ul className="list-disc list-inside text-gray-300 text-sm">
+                  {team.players.map((player, i) => (
+                    <li key={i}>{player.name}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </li>
+        ))}
+      </ul>
 
-      <button
-        disabled={fixtures.length === 0}
-        className={`w-full mt-6 font-bold py-2 rounded ${
-          fixtures.length > 0 ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-gray-500 text-gray-300 cursor-not-allowed'
-        }`}
-        onClick={startTournament}
-      >
-        Start Tournament ➔
-      </button>
+      <div className="max-w-md mx-auto">
+        <button
+          disabled={teams.length !== totalTeams}
+          className={`w-full font-bold py-2 rounded ${
+            teams.length === totalTeams
+              ? 'bg-green-600 hover:bg-green-700 text-white'
+              : 'bg-gray-500 text-gray-300 cursor-not-allowed'
+          }`}
+          onClick={goToFixtures}
+        >
+          Create Fixtures ➔
+        </button>
+      </div>
     </main>
+  );
+}
+
+
+export default function FixturesWrapper() {
+  return (
+    <Suspense fallback={<div className='text-center py-10 text-gray-300'>Loading fixtures...</div>}>
+      <FixturesContent />
+    </Suspense>
   );
 }
