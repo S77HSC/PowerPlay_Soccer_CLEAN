@@ -7,7 +7,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import BrandHeader from '../../../components/BrandHeader';
 import Image from 'next/image';
 
-function FixturesContent TeamManager() {
+function FixturesContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -138,7 +138,6 @@ function FixturesContent TeamManager() {
     </main>
   );
 }
-
 
 export default function FixturesWrapper() {
   return (
