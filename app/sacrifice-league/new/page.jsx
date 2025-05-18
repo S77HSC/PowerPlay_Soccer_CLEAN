@@ -1,6 +1,4 @@
 'use client';
-export const dynamic = 'force-dynamic';
-
 import loadComponent from 'next/dynamic';
 import { Suspense } from 'react';
 
