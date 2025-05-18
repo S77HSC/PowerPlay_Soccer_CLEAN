@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import React, { useEffect, useState, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { createLeagueTable, updateStandings } from '../../../powerplay-soccer/sacrifice/leagueEngine';
