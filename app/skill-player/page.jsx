@@ -3,9 +3,9 @@
 import React, { Suspense } from 'react';
 import PageContent from './PageContent';
 
-export default function Wrapper() {
+export default function SkillPlayerWrapper() {
   return (
-    <Suspense fallback={<div className="text-white text-center p-6">Loading...</div>}>
+    <Suspense fallback={<div className="text-white text-center p-6">Loading skill player...</div>}>
       <PageContent />
     </Suspense>
   );
