@@ -1,14 +1,11 @@
 'use client';
 
-export const dynamic = 'force-dynamic';
-
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { sessionData } from '../../lib/sessionData';
 import confetti from 'canvas-confetti';
 import axios from 'axios';
-import loadDynamic from 'next/dynamic';
 
 const WebcamDetection = dynamic(() => import('../../components/WebcamDetection'), { ssr: false });
 
