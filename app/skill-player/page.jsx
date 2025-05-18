@@ -1,7 +1,7 @@
 'use client';
 
 import React, { Suspense } from 'react';
-import PageContent from './PageContent';
+import PageContent from './SkillPlayerContent';
 
 export default function SkillPlayerWrapper() {
   return (
