@@ -8,7 +8,7 @@ import { supabase } from '../../lib/supabase';
 import { sessionData } from '../../lib/sessionData';
 import confetti from 'canvas-confetti';
 import axios from 'axios';
-import dynamic from 'next/dynamic';
+import loadDynamic from 'next/dynamic';
 
 const WebcamDetection = dynamic(() => import('../../components/WebcamDetection'), { ssr: false });
 
