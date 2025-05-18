@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import BrandHeader from '../../../components/BrandHeader';
 import Image from 'next/image';
 
-function TournamentSetup() {
+export default function TournamentSetup() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -177,5 +177,3 @@ function TournamentSetup() {
     </main>
   );
 }
-
-export default TournamentSetup;
