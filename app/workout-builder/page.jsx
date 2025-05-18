@@ -1,424 +1,310 @@
-// Refactored version of WorkoutBuilder using Tailwind CSS for mobile responsiveness
 "use client";
-
-import { useState, useEffect, useRef } from "react";
-import { supabase } from "../../lib/supabase";
-import { sessionData } from "../../lib/sessionData";
-import MotionTip from "../../components/MotionTip";
+import { useEffect, useRef, useState } from 'react';
+import { supabase } from '../../lib/supabase';
+import { sessionData } from '../../lib/sessionData';
+import WebcamDetection from '../../components/WebcamDetection';
+import confetti from 'canvas-confetti';
 
 export default function WorkoutBuilder() {
-  const videoRef = useRef(null);
-  const [selected, setSelected] = useState([]);
-  const [workout, setWorkout] = useState([]);
-  const [countdown, setCountdown] = useState(0);
-  const [isRunning, setIsRunning] = useState(false);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [mode, setMode] = useState("work");
-  const [protocolPhase, setProtocolPhase] = useState(null);
-  const [currentRep, setCurrentRep] = useState(1);
-  const [isPaused, setIsPaused] = useState(false);
-  const [motionDetected, setMotionDetected] = useState(false);
-  const [motionTimestamps, setMotionTimestamps] = useState([]);
+  const [player, setPlayer] = useState(null);
+  const [points, setPoints] = useState(0);
   const [selectedLevel, setSelectedLevel] = useState(null);
-  const [showXpModal, setShowXpModal] = useState(false);
+  const [workout, setWorkout] = useState([]);
+  const [isReady, setIsReady] = useState(false);
+  const [isRunning, setIsRunning] = useState(false);
+  const [isResting, setIsResting] = useState(false);
+  const [prepCountdown, setPrepCountdown] = useState(0);
+  const [repCountdown, setRepCountdown] = useState(0);
+  const [totalTime, setTotalTime] = useState(0);
+  const [currentSkillIndex, setCurrentSkillIndex] = useState(0);
+  const [currentRep, setCurrentRep] = useState(0);
+  const [touchCount, setTouchCount] = useState(0);
+  const [lastBackendTouchCount, setLastBackendTouchCount] = useState(0);
+  const [baselineTouchCount, setBaselineTouchCount] = useState(0);
+  const [touchesPerSkill, setTouchesPerSkill] = useState([]);
   const [xpEarned, setXpEarned] = useState(0);
-  const [justChangedSkill, setJustChangedSkill] = useState(false);
-  const raceStartBeeps = useRef(null);
-    const whistleStart = useRef(null);
-  const whistleStop = useRef(null);
-  const [showMotionWarnings, setShowMotionWarnings] = useState(true);
+  const [showXpModal, setShowXpModal] = useState(false);
+  const [showFlash, setShowFlash] = useState(false);
 
-  const start = () => {
-    if (!workout.length) return;
-    setCurrentIndex(0);
-    setCurrentRep(1);
-    setMode("work");
-    setProtocolPhase("countdown");
-    setCountdown(3);
-    if (videoRef.current) videoRef.current.play();
-    setIsRunning(true);
-    setIsPaused(false);
+  const videoRef = useRef(null);
+
+  const XP_GOAL = 100;
+  const REPS = 3;
+  const REST = 20;
+
+  const LEVELS = {
+    beginner: 20,
+    intermediate: 30,
+    advanced: 40,
+    elite: 50,
   };
 
-  const stop = () => {
-    setIsRunning(false);
-    setCountdown(0);
-    setCurrentIndex(0);
-    setCurrentRep(1);
-    setMode("work");
-    setProtocolPhase(null);
-    setIsPaused(false);
-    setWorkout([]);
-    setSelected([]);
-    if (videoRef.current) {
-      videoRef.current.pause();
-      videoRef.current.currentTime = 0;
-    }
-  };
-
-  const pause = () => {
-    setIsPaused(true);
-    setIsRunning(false);
-    if (videoRef.current) videoRef.current.pause();
-  };
-
-  const resume = () => {
-    setIsPaused(false);
-    setIsRunning(true);
-    if (videoRef.current) videoRef.current.play();
+  const playAudio = (fileName) => {
+    const audio = new Audio(`/sounds/${fileName}`);
+    audio.play();
   };
 
   useEffect(() => {
-    const handleMotion = (event) => {
-      const { x, y, z } = event.accelerationIncludingGravity || {};
-      if (x === null || y === null || z === null) return;
-      const movementMagnitude = Math.sqrt(x * x + y * y + z * z);
-      if (movementMagnitude > 1.2) {
-        const now = Date.now();
-        setMotionTimestamps((prev) => [...prev.filter(ts => now - ts < 5000), now]);
+    const resetTouches = async () => {
+      try {
+        await fetch("http://127.0.0.1:8000/touches/reset", { method: "POST" });
+        await new Promise(resolve => setTimeout(resolve, 500));
+      const res = await fetch("http://127.0.0.1:8000/touches/");
+      const data = await res.json();
+      const backendTouch = data.touches || 0;
+      setTouchCount(0);
+      setBaselineTouchCount(backendTouch);
+      setLastBackendTouchCount(backendTouch);
+      setTouchesPerSkill([]);
+      } catch (err) {
+        console.error("Failed to reset touches:", err);
       }
     };
-    window.addEventListener("devicemotion", handleMotion);
-    return () => window.removeEventListener("devicemotion", handleMotion);
+    resetTouches();
   }, []);
 
   useEffect(() => {
-    if (!isRunning || mode !== "work") return;
-    const interval = setInterval(() => {
-      const now = Date.now();
-      const recent = motionTimestamps.filter((ts) => now - ts < 3000);
-      setMotionDetected(recent.length > 0);
-    }, 2000);
+    const fetchPlayer = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase.from('players').select('*').eq('auth_id', user.id).single();
+      if (data) {
+        setPlayer(data);
+        setPoints(data.points || 0);
+      }
+    };
+    fetchPlayer();
+  }, []);
+
+  useEffect(() => {
+    if (!isRunning) return;
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch("http://127.0.0.1:8000/touches/");
+        const data = await res.json();
+        const newTouchCount = data.touches || 0;
+        if (newTouchCount > lastBackendTouchCount) {
+          setShowFlash(true);
+          setTimeout(() => setShowFlash(false), 300);
+        }
+        const delta = newTouchCount - lastBackendTouchCount;
+        const relativeCount = newTouchCount - baselineTouchCount;
+        setTouchCount(relativeCount);
+        setTouchesPerSkill(prev => {
+          const updated = [...prev];
+          updated[currentSkillIndex] = relativeCount;
+          return updated;
+        });
+        setLastBackendTouchCount(newTouchCount);
+      } catch (err) {
+        console.error("Failed to fetch touches:", err);
+      }
+    }, 500);
     return () => clearInterval(interval);
-  }, [isRunning, mode, motionTimestamps]);
+  }, [isRunning, currentSkillIndex, baselineTouchCount, lastBackendTouchCount]);
 
-  const [current, setCurrent] = useState(null);
-
-  useEffect(() => {
-    setCurrent(workout[currentIndex] || null);
-  }, [currentIndex, workout]);
-
-  
-
-  useEffect(() => {
-    if (!videoRef.current || !current) return;
-
-    videoRef.current.load();
-
-    if (protocolPhase === "work" && !isPaused && isRunning) {
-      videoRef.current.play().catch(() => {});
-    }
-
-    if (protocolPhase === "rest") {
-      setCountdown(current.rest);
-    } else if (protocolPhase === "work") {
-      setCountdown(current.time);
-    }
-  }, [current, protocolPhase, isPaused, isRunning]);
-
-
-
-  useEffect(() => {
-    if (!isRunning || isPaused) return;
-    if (countdown === 0 && protocolPhase === "countdown") {
-        if (whistleStart.current) whistleStart.current.play();
-    setProtocolPhase("work");
-    setMode("work");
-    setCountdown(current.time);
-    return;
-    }
-
-    if (countdown === 0 && protocolPhase === "work") {
-    if (whistleStop.current) whistleStop.current.play();
-    if (currentRep < current.reps) {
-      setProtocolPhase("rest");
-      setMode("rest");
-      setCountdown(current.rest);
-    } else {
-      if (currentIndex + 1 < workout.length) {
-        setCurrentIndex((prev) => prev + 1);
-        setJustChangedSkill(true);
-      setProtocolPhase("rest");
-      setMode("rest");
-      setCountdown(current.rest);
-      } else {
-        setIsRunning(false);
-        setShowXpModal(true);
-        setTimeout(() => setShowXpModal(false), 5000);
-        setXpEarned(workout.length * 10);
-        const updateXP = async () => {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return;
-
-  const { data: player, error } = await supabase
-    .from('players')
-    .select('points')
-    .eq('auth_id', user.id)
-    .single();
-
-  if (error) return console.error('Error fetching player:', error);
-
-  const newXP = (player?.points || 0) + (workout.length * 10);
-
-  const { error: updateError } = await supabase
-    .from('players')
-    .update({ points: newXP })
-    .eq('auth_id', user.id);
-
-  if (updateError) console.error('Error updating XP in players:', updateError);
-
-  // Also insert workout_sessions entries
-  const { data: playerMeta, error: idError } = await supabase
-    .from('players')
-    .select('id')
-    .eq('auth_id', user.id)
-    .single();
-
-  if (idError) return console.error('Failed to fetch player ID:', idError);
-
-  const sessions = workout.map((w) => ({
-    player_id: playerMeta.id,
-    skill_name: w.key,
-    reps: w.reps,
-    work_time: w.time,
-    rest_time: w.rest,
-    xr_awarded: 10,
-    created_at: new Date().toISOString(),
-    completed_at: new Date().toISOString()
-  }));
-
-  const { error: sessionInsertError } = await supabase
-    .from('workout_sessions')
-    .insert(sessions);
-
-  if (sessionInsertError) console.error('Error logging workout session:', sessionInsertError);
-};
-        updateXP();
-      }
-    }
-    return;
-    }
-
-    if (countdown === 0 && protocolPhase === "rest") {
-    if (whistleStart.current) whistleStart.current.play();
-
-    if (justChangedSkill) {
-      setCurrentRep(1);
-      setJustChangedSkill(false);
-      setProtocolPhase("work");
-      setMode("work");
-      setCountdown(current.time);
-    } else if (currentRep < current.reps) {
-      setCurrentRep(currentRep + 1);
-      setProtocolPhase("work");
-      setMode("work");
-      setCountdown(current.time);
-    } else {
-      if (currentIndex + 1 < workout.length) {
-        setCurrentIndex((prev) => prev + 1);
-        setJustChangedSkill(true);
-        setProtocolPhase("rest");
-        setMode("rest");
-        // countdown will be set by useEffect after current updates
-        // Removed countdown set here to prevent premature access to outdated workout index
-      } else {
-        setIsRunning(false);
-        setShowXpModal(true);
-        setXpEarned(workout.length * 10);
-      }
-    }
-    return;
-    }
-
-    const timer = setTimeout(() => {
-      setCountdown((c) => {
-        
-        return c - 1;
-      });
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [countdown, isRunning, isPaused, protocolPhase, current, currentRep, currentIndex, workout]);
-
-  const generatePresetWorkout = (level) => {
+  const prepareWorkout = (level) => {
     setSelectedLevel(level);
-    const preset = {
-      beginner: { reps: 2, time: 20, rest: 10 },
-      intermediate: { reps: 3, time: 30, rest: 15 },
-      advanced: { reps: 4, time: 40, rest: 20 },
-    }[level];
-
     const unlocked = Object.entries(sessionData)
       .filter(([_, s]) => s.unlockXP <= 9999)
       .sort(() => 0.5 - Math.random())
       .slice(0, 4)
-      .map(([key, skill]) => ({ key, ...skill, ...preset }));
-
+      .map(([key, s]) => ({ ...s, key, reps: REPS, time: LEVELS[level], rest: REST }));
     setWorkout(unlocked);
-    setSelected(unlocked.map((s) => s.key));
+    setIsReady(true);
+    setIsRunning(false);
+    setIsResting(false);
+    setCurrentSkillIndex(0);
+    setCurrentRep(0);
+    setPrepCountdown(0);
+    setRepCountdown(0);
+    setTouchCount(0);
+    setTouchesPerSkill([]);
+
+    const total = unlocked.reduce((sum, s) => sum + (s.time * REPS) + (REST * REPS), 0) - REST;
+    setTotalTime(total);
   };
 
-  
+  const startSession = () => {
+    playAudio('VoicesAI_Sonic_Rep_one.mp3');
+    setPrepCountdown(3);
+  };
+
+  useEffect(() => {
+    if (prepCountdown > 0) {
+      const timer = setTimeout(() => setPrepCountdown(p => p - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+    if (prepCountdown === 0 && isReady && !isRunning) {
+      setIsRunning(true);
+      setRepCountdown(workout[0]?.time);
+      setLastBackendTouchCount(0);
+    }
+  }, [prepCountdown]);
+
+  useEffect(() => {
+    if (!isRunning || repCountdown <= 0) return;
+    const timer = setTimeout(() => setRepCountdown(r => r - 1), 1000);
+    const globalTimer = setTimeout(() => setTotalTime(t => t - 1), 1000);
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(globalTimer);
+    };
+  }, [repCountdown, isRunning]);
+
+  useEffect(() => {
+    if (!isRunning || repCountdown > 0) return;
+    const current = workout[currentSkillIndex];
+    if (isResting) {
+      if (currentRep + 1 < REPS) {
+        const nextRep = currentRep + 1;
+        setCurrentRep(nextRep);
+        setIsResting(false);
+        setRepCountdown(current.time);
+        if (nextRep === 1) playAudio('VoicesAI_Sonic_Rep_two.mp3');
+        if (nextRep === 2) playAudio('VoicesAI_Sonic_Rep_three.mp3');
+      } else if (currentSkillIndex + 1 < workout.length) {
+        const nextSkillIndex = currentSkillIndex + 1;
+        setCurrentSkillIndex(nextSkillIndex);
+        setCurrentRep(0);
+        setIsResting(false);
+        setRepCountdown(workout[nextSkillIndex].time);
+        playAudio('VoicesAI_Sonic_next_skill.mp3');
+        setTimeout(() => playAudio('VoicesAI_Sonic_Rep_one.mp3'), 1500);
+      } else {
+        playAudio('VoicesAI_Sonic_session_completed.mp3');
+        finishWorkout();
+      }
+    } else {
+      setIsResting(true);
+      playAudio('VoicesAI_Sonic_Take_a_break.mp3');
+      setRepCountdown(REST);
+    }
+  }, [repCountdown, isRunning]);
+
+  const finishWorkout = async () => {
+    setIsRunning(false);
+    setIsReady(false);
+    setShowXpModal(true);
+    setXpEarned(25);
+    setTimeout(() => setShowXpModal(false), 4000);
+
+    if (player) {
+      try {
+        const sessionInserts = workout.map((skill, i) => ({
+          player_id: player.id,
+          completed_at: new Date().toISOString(),
+          xr_awarded: 25,
+          reps: skill.reps,
+          work_time: skill.time,
+          rest_time: skill.rest,
+          skill_name: skill.name || skill.title,
+          touches: touchesPerSkill[i] || 0,
+        }));
+
+        await supabase.from('workout_sessions').insert(sessionInserts);
+
+        await supabase.from('workout_table').insert([
+          {
+            player_id: player.id,
+            level: selectedLevel,
+            workout_data: workout.map(w => ({
+              name: w.name || w.title,
+              reps: w.reps,
+              time: w.time,
+              rest: w.rest,
+            })),
+            xp: 25,
+            total_touches: touchCount,
+            created_at: new Date().toISOString(),
+          },
+        ]);
+
+        const newPoints = points + 25;
+        await supabase.from('players').update({ points: newPoints }).eq('id', player.id);
+        setPoints(newPoints);
+
+        if (Math.floor(newPoints / XP_GOAL) > Math.floor(points / XP_GOAL)) {
+          confetti({ particleCount: 100, spread: 60 });
+        }
+      } catch (err) {
+        console.error("Error saving session to Supabase:", err);
+      }
+    }
+    resetWorkout();
+  };
+
+  const resetWorkout = () => {
+    setWorkout([]);
+    setCurrentSkillIndex(0);
+    setCurrentRep(0);
+    setTouchCount(0);
+    setTouchesPerSkill([]);
+    setPrepCountdown(0);
+    setRepCountdown(0);
+    setSelectedLevel(null);
+    setTotalTime(0);
+  };
+
+  const current = workout[currentSkillIndex];
 
   return (
-     <div>
-    <div className="p-4 bg-slate-900 text-white min-h-screen">
-      {showMotionWarnings && mode === "work" && isRunning && !motionDetected && (
-        <div className="bg-yellow-500 text-black p-3 rounded-lg text-center mb-4">
-          🕵️ We’re not detecting much movement. Keep your phone in your pocket or hand while training for best results!
-          <button
-            onClick={() => setShowMotionWarnings(false)}
-            className="ml-4 underline text-blue-700 hover:text-blue-900"
-          >
-            Dismiss warning
-          </button>
+    <main className="relative min-h-screen text-white px-4 py-6 font-sans bg-gradient-to-br from-[#0a0f19] via-[#111827] to-[#0a0f19]">
+      <div className="absolute inset-0 z-0 opacity-30 bg-cover bg-center pointer-events-none" style={{ backgroundImage: "url('/images/futuristic-football-bg.jpg')" }} />
+      <div className="relative z-10 max-w-6xl mx-auto space-y-8 px-4 md:px-8">
+        <h2 className="text-center text-sky-400 font-bold text-xl">🏋️ Auto Workout Builder</h2>
+        {showXpModal && (
+          <div className="fixed top-1/4 left-1/2 transform -translate-x-1/2 bg-slate-800 p-6 rounded-xl text-center z-50 shadow-lg">
+            <h3 className="text-sky-400 font-bold mb-2 text-lg">🎉 XP Earned!</h3>
+            <p className="text-2xl font-bold">{xpEarned} XP</p>
+          </div>
+        )}
+        <div className="grid grid-cols-2 sm:grid-cols-2 gap-4 justify-center max-w-xs mx-auto">
+          {Object.keys(LEVELS).map(level => (
+            <button key={level} onClick={() => prepareWorkout(level)} className={`px-4 py-2 rounded-lg font-semibold transition-colors ${selectedLevel === level ? 'bg-sky-500 text-white' : 'bg-slate-800 hover:bg-sky-600 text-white'}`}>
+              {level.charAt(0).toUpperCase() + level.slice(1)}
+            </button>
+          ))}
         </div>
-      )}
-
-<div className="p-4 bg-slate-900 text-white min-h-screen">
-      <div className="flex flex-col items-center mb-4">
-        <img src="/powerplay-sessionbuilder-logo.png" alt="Session Builder Logo" className="h-30 w-auto" />
-        <p className="mt-2 text-sm tracking-widest text-slate-400 uppercase">Train. Improve. Master.</p>
-      </div>
-
-<h2 className="text-3xl font-bold text-sky-400 mb-6 text-center">Workout Builder</h2>
-
-<div className="mb-6 flex justify-center">
-  <div className="inline-flex rounded-full bg-slate-800 p-1 space-x-1">
-    {["beginner", "intermediate", "advanced"].map((level) => (
-      <button
-        key={level}
-        onClick={() => generatePresetWorkout(level)}
-        className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors duration-200 ${
-          selectedLevel === level ? "bg-sky-500 text-white" : "text-slate-300 hover:bg-slate-700"
-        }`}
-      >
-        {level.charAt(0).toUpperCase() + level.slice(1)}
-      </button>
-    ))}
-  </div>
-</div>
-
-<div className="flex flex-wrap gap-4 mb-8">
-  {Object.entries(sessionData).map(([key, s]) => (
-    <div
-      key={key}
-      className={`p-4 rounded-lg w-full sm:w-[45%] md:w-[30%] ${
-        selected.includes(key) ? "bg-blue-600" : "bg-slate-800"
-      }`}
-    >
-      <h4 className="text-lg font-semibold">{s.title}</h4>
-      <p className="text-sm text-slate-300">{s.description}</p>
-      <button
-        onClick={() =>
-          setWorkout([...workout, { key, ...s, reps: 3, time: 30, rest: 15 }])
-        }
-        className="btn bg-teal-500 mt-2 rounded-xl px-5 py-2.5"
-      >
-        + Add
-      </button>
-    </div>
-  ))}
-</div>
-
-{workout.length > 0 && (
-  <div className="mb-8">
-    <h3 className="text-2xl">📝 Workout Preview</h3>
-    <p className="text-slate-400">
-      Total time: {workout.reduce((sum, w) => sum + (w.time + w.rest) * w.reps, 0)}s
-    </p>
-    <ul className="list-none p-0 space-y-3">
-      {workout.map((w, i) => (
-        <li key={w.key} className="bg-slate-800 p-3 rounded">
-          <strong>{i + 1}. {w.title}</strong><br />
-          <span className="text-sm text-slate-300">
-            Reps: {w.reps} | Time: {w.time}s | Rest: {w.rest}s
-          </span>
-        </li>
-      ))}
-    </ul>
-  </div>
-)}
-
-<div className="flex flex-wrap gap-4 mb-8 justify-center">
-  <button onClick={start} className="btn bg-green-500 rounded-xl px-5 py-2.5">▶ Start</button>
-  <button onClick={stop} className="btn bg-red-500 rounded-xl px-5 py-2.5">⏹ Stop</button>
-  {isRunning && !isPaused && (
-    <button onClick={pause} className="btn bg-amber-500 rounded-xl px-5 py-2.5">⏸ Pause</button>
-  )}
-  {isPaused && (
-    <button onClick={resume} className="btn bg-emerald-500 rounded-xl px-5 py-2.5">▶ Resume</button>
-  )}
-</div>
-
-{current && (
-  <div className="relative w-full flex flex-col items-center">
-    <video
-      ref={videoRef}
-      loop={mode === "work"}
-      controls
-      muted
-      playsInline
-      poster={current.thumbnail}
-      className="rounded-xl mb-4 w-full max-w-full h-auto"
-    >
-      <source src={current.video} type="video/mp4" />
-    </video>
-
-    {protocolPhase === "countdown" && workout[currentIndex - 1] && (
-      <div className="absolute inset-0 flex items-center justify-center z-40">
-        <div className="bg-black bg-opacity-70 text-white text-3xl px-6 py-4 rounded-xl shadow-lg animate-fade-in">
-          Next Skill: {current.title}
-        </div>
-      </div>
-    )}
-
-    {(isPaused || protocolPhase === "countdown") && (
-      <div className={`absolute inset-0 flex items-center justify-center text-white font-bold text-5xl z-10 ${
-        isPaused ? "bg-black/60" : "bg-black/40"
-      }`}>
-        {isPaused ? "Paused" : (mode === "rest" ? "Rest" : countdown)}
-      </div>
-    )}
-
-    <h4 className="text-xl mt-2">
-  {protocolPhase === "countdown" && workout[currentIndex - 1] ? (
-    <span className="text-yellow-300 animate-pulse">Next: {current.title} — Get Ready!</span>
-  ) : protocolPhase === "countdown" ? (
-    "Get Ready..."
-  ) : mode === "work" ? (
-    `Now: ${current.title} (Rep ${currentRep} of ${current.reps})`
-  ) : (
-    "Rest"
-  )}
-</h4>
-
-    {countdown !== null && (
-      <p className="text-3xl">{countdown}s</p>
-    )}
-
-    {workout[currentIndex + 1] && currentRep === current.reps && (
-      <p className="text-slate-400">
-        Next: {workout[currentIndex + 1]?.title}
-      </p>
-    )}
-  </div>
-)}    {showXpModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-50">
-          <div className="bg-slate-800 px-6 py-4 rounded-xl shadow-xl text-center animate-bounce">
-            <h3 className="text-xl font-bold text-sky-400 mb-2">🎉 Workout Complete!</h3>
-            <p className="text-lg font-semibold mb-2">You earned <span className="text-green-400">{xpEarned} XP</span>!</p>
-            <div className="h-3 w-64 bg-slate-700 rounded-full overflow-hidden mx-auto">
-              <div className="h-full bg-green-400 animate-[grow_4s_linear]" style={{ width: '100%' }}></div>
+        {isReady && (
+          <>
+            <div className="text-center mt-4 text-sm space-y-1">
+              <p className="text-sky-300">Total Time Remaining: {Math.floor(totalTime / 60)}:{(totalTime % 60).toString().padStart(2, "0")}</p>
+              <p className="text-sky-300">XP: {points} / Level {Math.floor(points / XP_GOAL)}</p>
+              <p className="text-green-400 font-extrabold text-4xl">Touches: {touchCount}</p>
             </div>
-          </div>
-        </div>
-      )}
-
-      <audio ref={whistleStart} src="/sounds/whistle-start.mp3" preload="auto" />
-      <audio ref={whistleStop} src="/sounds/whistle-stop.mp3" preload="auto" />
-          </div>
-    </div>
-  </div>
-);
+            <div className="text-center space-y-2">
+              <h2 className="text-5xl font-extrabold">{prepCountdown > 0 ? `${prepCountdown}` : `${repCountdown}s`}</h2>
+              <p className="text-xl text-sky-400">{isResting ? 'Rest' : `Skill ${currentSkillIndex + 1}, Rep ${currentRep + 1}`}</p>
+              <div className="flex justify-center gap-4 mt-2">
+                <button onClick={startSession} disabled={isRunning} className="bg-green-600 hover:bg-green-500 px-6 py-2 rounded text-lg font-semibold">Start</button>
+                {isRunning ? (
+                  <button onClick={() => setIsRunning(false)} className="bg-yellow-600 hover:bg-yellow-500 px-4 py-1 rounded">Pause</button>
+                ) : (
+                  <button onClick={() => setIsRunning(true)} className="bg-blue-600 hover:bg-blue-500 px-4 py-1 rounded">Resume</button>
+                )}
+                <button onClick={() => { setIsRunning(false); setIsReady(false); setWorkout([]); }} className="bg-red-600 hover:bg-red-500 px-4 py-1 rounded">Stop</button>
+              </div>
+            </div>
+            <div className="w-full mt-4 grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+              <div className="rounded-xl overflow-hidden border border-white/10 shadow relative">
+                <WebcamDetection active={isRunning} />
+                {showFlash && <div className="absolute inset-0 bg-green-500 opacity-30 animate-pulse" />}
+              </div>
+              <div className="bg-slate-800 p-4 rounded-xl space-y-2">
+                <h3 className="text-xl font-bold text-sky-400">Session Overview</h3>
+                {workout.map((s, i) => (
+                  <div key={i} className={`text-sm border-b pb-1 ${i === currentSkillIndex ? 'bg-sky-900/30 rounded' : ''}`}>
+                    <p className="font-semibold text-white">Skill {i + 1}: {s.name || s.title}</p>
+                    <p className="text-sky-300">{s.reps} Reps × {s.time}s</p>
+                    {i === currentSkillIndex && s.video && <video ref={videoRef} src={s.video} controls muted autoPlay loop className="mt-2 w-full rounded" />}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </main>
+  );
 }

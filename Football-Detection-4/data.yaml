@@ -1,0 +1,13 @@
+names:
+- football
+- objects
+nc: 2
+roboflow:
+  license: Private
+  project: football-detection-6vezx
+  url: https://app.roboflow.com/football-detection-model/football-detection-6vezx/4
+  version: 4
+  workspace: football-detection-model
+test: ../test/images
+train: ../train/images
+val: ../valid/images

@@ -27,3 +27,36 @@ button {
 .scrollbar-hide::-webkit-scrollbar {
   display: none; /* Chrome, Safari, Opera */
 }
+
+/* 🔧 Responsive chart tweaks for Recharts components */
+@media (max-width: 768px) {
+  .recharts-wrapper {
+    width: 100% !important;
+  }
+
+  .recharts-yAxis .recharts-cartesian-axis-tick text,
+  .recharts-xAxis .recharts-cartesian-axis-tick text {
+    font-size: 10px;
+  }
+
+  .recharts-xAxis .recharts-cartesian-axis-tick text {
+    transform: rotate(-30deg);
+    text-anchor: end;
+  }
+
+  .recharts-tooltip-wrapper {
+    font-size: 12px;
+  }
+
+  .text-md {
+    font-size: 0.875rem;
+  }
+
+  .text-lg {
+    font-size: 1rem;
+  }
+
+  .text-xl {
+    font-size: 1.25rem;
+  }
+}
