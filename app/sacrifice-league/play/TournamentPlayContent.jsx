@@ -1,14 +1,15 @@
 'use client';
 
-export const dynamic = 'force-dynamic';
+import { useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
-import React, { Suspense } from 'react';
-import TournamentPlayContent from './TournamentPlayContent';
+export default function TournamentPlayContent() {
+  const searchParams = useSearchParams();
+  const matchId = searchParams.get('match');
 
-export default function PlayPageWrapper() {
   return (
-    <Suspense fallback={<div className="text-white text-center p-6">Loading match data...</div>}>
-      <TournamentPlayContent />
-    </Suspense>
+    <div className="text-white text-center">
+      Playing match: <strong>{matchId}</strong>
+    </div>
   );
 }
