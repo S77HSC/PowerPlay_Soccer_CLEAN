@@ -34,6 +34,7 @@ export default function LeaderboardPage() {
   const [currentPlayer, setCurrentPlayer] = useState(null);
   const [currentRank, setCurrentRank] = useState(null);
   const [sessionStats, setSessionStats] = useState({ sessions: 0, totalTime: 0, wins: 0 });
+  const [activeTab, setActiveTab] = useState('points');
 
   const fetchWorkoutStats = async (playerId) => {
     if (!playerId) return;
@@ -129,63 +130,68 @@ export default function LeaderboardPage() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-[#0A0F24] text-white py-10 px-4">
-      <h1 className="text-2xl font-bold text-center mb-8">🌍 Global Leaderboard</h1>
+    <main className="relative h-screen overflow-hidden bg-gradient-to-br from-[#0a0f19] via-[#111827] to-[#0a0f19] text-white px-4 py-8 font-sans">
+      <div className="absolute inset-0 z-0 opacity-30 bg-cover bg-no-repeat bg-center pointer-events-none" style={{ backgroundImage: "url('/images/futuristic-football-bg.jpg')" }}></div>
+      <div className="relative z-10 max-w-7xl mx-auto h-full flex flex-col space-y-6">
+        <h1 className="text-2xl font-bold text-center">🌍 Global Leaderboard</h1>
 
-      {currentPlayer && (
-        <div className="max-w-3xl mx-auto mb-8 p-6 border border-cyan-600 rounded-xl bg-gray-900 shadow-lg">
-          <div className="flex flex-col sm:flex-row items-center gap-6">
-            <img
-              src={currentPlayer.avatar_url?.startsWith('http') ? currentPlayer.avatar_url : `https://uitlajpnqruvvykrcyyg.supabase.co/storage/v1/object/public/avatars/${currentPlayer.avatar_url}`}
-              alt="Avatar"
-              className="w-24 h-24 object-cover aspect-square rounded-full border-2 border-cyan-500"
-/>
-            <div className="flex-1 w-full">
-              <div className="flex flex-wrap justify-between items-center">
-                <h2 className="text-2xl font-bold text-cyan-400 flex items-center gap-2">
-                  {currentPlayer.name}
-                  {currentPlayer.country && (
-                    <img
-                      src={getFlagUrl(currentPlayer.country)?.toLowerCase()}
-                      alt={`Flag of ${currentPlayer.country}`}
-                      className="w-6 h-4 object-cover rounded-sm border border-gray-600"
-                    />
+        <div className="flex justify-center space-x-4">
+          <button onClick={() => setActiveTab('points')} className={`px-4 py-2 rounded-md border ${activeTab === 'points' ? 'bg-cyan-600 text-white' : 'bg-gray-800 text-gray-300'} hover:bg-cyan-700`}>
+            🏆 Top by Points
+          </button>
+          <button onClick={() => setActiveTab('workouts')} className={`px-4 py-2 rounded-md border ${activeTab === 'workouts' ? 'bg-cyan-600 text-white' : 'bg-gray-800 text-gray-300'} hover:bg-cyan-700`}>
+            🔥 Top by Workouts
+          </button>
+          {myTeam && (
+            <button onClick={() => setActiveTab('team')} className={`px-4 py-2 rounded-md border ${activeTab === 'team' ? 'bg-cyan-600 text-white' : 'bg-gray-800 text-gray-300'} hover:bg-cyan-700`}>
+              🛡️ My Team
+            </button>
+          )}
+        </div>
+
+        {currentPlayer && (
+          <div className="max-w-3xl mx-auto p-4 border border-cyan-600 rounded-xl bg-gray-900 shadow-lg">
+            <div className="flex flex-col sm:flex-row items-center gap-6">
+              <img
+                src={currentPlayer.avatar_url?.startsWith('http') ? currentPlayer.avatar_url : `https://uitlajpnqruvvykrcyyg.supabase.co/storage/v1/object/public/avatars/${currentPlayer.avatar_url}`}
+                alt="Avatar"
+                className="w-20 h-20 object-cover aspect-square rounded-full border-2 border-cyan-500"
+              />
+              <div className="flex-1 w-full">
+                <div className="flex flex-wrap justify-between items-center">
+                  <h2 className="text-xl font-bold text-cyan-400 flex items-center gap-2">
+                    {currentPlayer.name}
+                    {currentPlayer.country && (
+                      <img
+                        src={getFlagUrl(currentPlayer.country)?.toLowerCase()}
+                        alt={`Flag of ${currentPlayer.country}`}
+                        className="w-5 h-3 object-cover rounded-sm border border-gray-600"
+                      />
+                    )}
+                  </h2>
+                  {currentRank && (
+                    <p className="text-sm text-green-400">🌟 Rank: #{currentRank}</p>
                   )}
-                </h2>
-                {currentRank && (
-                  <p className="text-base text-green-400">🌟 Rank: #{currentRank}</p>
-                )}
-              </div>
-              <p className="text-sm text-gray-400 mt-1">Team: {currentPlayer.team}</p>
-              <p className="text-sm text-gray-400">Country: {currentPlayer.country}</p>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-4 text-sm">
-                <p className="text-yellow-400">🏆 Points: {currentPlayer.points}</p>
-                <p className="text-pink-400">🔥 Workouts: {sessionStats.sessions}</p>
-                <p className="text-blue-400">⏱️ Time: {Math.round(sessionStats.totalTime)} mins</p>
-                <p className="text-purple-400">✅ Wins: {sessionStats.wins}</p>
+                </div>
+                <p className="text-xs text-gray-400 mt-1">Team: {currentPlayer.team}</p>
+                <p className="text-xs text-gray-400">Country: {currentPlayer.country}</p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-4 text-xs">
+                  <p className="text-yellow-400">🏆 Points: {currentPlayer.points}</p>
+                  <p className="text-pink-400">🔥 Workouts: {sessionStats.sessions}</p>
+                  <p className="text-blue-400">⏱️ Time: {Math.round(sessionStats.totalTime)} mins</p>
+                  <p className="text-purple-400">✅ Wins: {sessionStats.wins}</p>
+                </div>
               </div>
             </div>
           </div>
+        )}
+
+        <div className="flex-1 overflow-y-auto max-h-[40vh] px-2">
+          {activeTab === 'points' && <LeaderboardPreviewCard players={players} />}
+          {activeTab === 'workouts' && <LeaderboardPreviewCard players={workoutLeaders} showWorkouts />}
+          {activeTab === 'team' && myTeam && <LeaderboardPreviewCard players={players} teamName={myTeam} />}
         </div>
-      )}
-
-      <div className="max-w-4xl mx-auto mb-10">
-        <LeaderboardPreviewCard players={players} />
       </div>
-
-      <h2 className="text-xl font-semibold mb-4 text-center">🔥 Top by Workouts + Time</h2>
-      <div className="max-w-4xl mx-auto mb-10">
-        <LeaderboardPreviewCard players={workoutLeaders} showWorkouts />
-      </div>
-
-      {myTeam && (
-        <>
-          <h2 className="text-xl font-semibold mb-4 text-center">🛡️ My Team: {myTeam}</h2>
-          <div className="max-w-4xl mx-auto">
-            <LeaderboardPreviewCard players={players} teamName={myTeam} />
-          </div>
-        </>
-      )}
     </main>
   );
 }
