@@ -3,17 +3,16 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-let globalStream = null; // Singleton webcam stream
+let globalStream = null;
 
 export default function WebcamDetection({ onTouchDetected, active }) {
   const videoRef = useRef(null);
   const lastTouchRef = useRef(Date.now());
   const [showTouch, setShowTouch] = useState(false);
-  const touchCooldown = 600; // milliseconds
+  const touchCooldown = 600;
 
-  const MODEL_ENDPOINT = process.env.NEXT_PUBLIC_MODEL_ENDPOINT || "http://127.0.0.1:8000/detect-football/";
+  const MODEL_ENDPOINT = process.env.NEXT_PUBLIC_MODEL_ENDPOINT;
 
-  // Setup camera once on mount
   useEffect(() => {
     const setupCamera = async () => {
       if (!videoRef.current) return;
@@ -26,17 +25,14 @@ export default function WebcamDetection({ onTouchDetected, active }) {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         globalStream = stream;
-        videoRef.current.srcObject = globalStream;
-
-        // Mobile-friendly settings
+        videoRef.current.srcObject = stream;
         videoRef.current.setAttribute("playsinline", true);
         videoRef.current.setAttribute("autoplay", true);
         videoRef.current.setAttribute("muted", true);
         videoRef.current.muted = true;
-
         await videoRef.current.play();
       } catch (err) {
-        console.error("Webcam access denied or failed:", err);
+        console.error("Webcam access error:", err);
       }
     };
 
@@ -47,7 +43,7 @@ export default function WebcamDetection({ onTouchDetected, active }) {
     let interval;
 
     const detect = async () => {
-      console.log("Running detection...");
+      console.log("[Detect] Running...");
       const video = videoRef.current;
       if (!video || video.readyState !== 4) return;
 
@@ -62,26 +58,27 @@ export default function WebcamDetection({ onTouchDetected, active }) {
         formData.append('file', blob, 'frame.jpg');
 
         try {
-          const response = await fetch(MODEL_ENDPOINT, {
+          const res = await fetch(MODEL_ENDPOINT, {
             method: 'POST',
-            body: formData,
+            body: formData
           });
 
-          const result = await response.json();
-          console.log("Backend response:", result);
+          const result = await res.json();
+          console.log("[Detect] Response:", result);
 
           const predictions = result.predictions || [];
           const detected = predictions.some(p => p.class === 'sports ball' && p.confidence > 0.4);
+          console.log("[Detect] Found:", predictions.length, "Detected?", detected);
 
           if (detected && Date.now() - lastTouchRef.current > touchCooldown) {
-            console.log("Touch detected!");
+            console.log("[Detect] TOUCH!");
             lastTouchRef.current = Date.now();
             setShowTouch(true);
             if (onTouchDetected) onTouchDetected();
             setTimeout(() => setShowTouch(false), 500);
           }
         } catch (err) {
-          console.error('Detection error:', err);
+          console.error("[Detect] Error:", err);
         }
       }, 'image/jpeg');
     };
@@ -89,12 +86,13 @@ export default function WebcamDetection({ onTouchDetected, active }) {
     if (active) {
       interval = setInterval(detect, 500);
     }
+
     return () => clearInterval(interval);
   }, [active, onTouchDetected]);
 
   return (
     <div className="relative">
-      <video ref={videoRef} id="live-webcam" className="w-full rounded-xl" playsInline muted />
+      <video ref={videoRef} className="w-full rounded-xl" playsInline muted />
       {showTouch && (
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="bg-green-500 text-white font-bold text-xl px-4 py-2 rounded-xl shadow-lg animate-pulse">
