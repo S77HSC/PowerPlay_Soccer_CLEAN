@@ -1,12 +1,25 @@
-
 'use client';
 
 import React from 'react';
 import GearCard from './GearCard';
 
-const LockerRoomStore = ({ playerId, activeTab, items, setSelectedItem }) => {
+const LockerRoom = ({ playerId, activeTab, items = [
+    {
+      id: 'kit1',
+      name: 'Red Home Kit',
+      image: '/public/LockerRoom/powerplay_kit_red.png',
+      xp: 100
+    },
+    {
+      id: 'kit2',
+      name: 'Blue Away Kit',
+      image: '/public/LockerRoom/powerplay_kit_blue.png',
+      xp: 150
+    }
+  ] }) => {
   const handleUnlock = (item) => {
     console.log(`Unlocking ${item.name} for ${item.xp} XP`);
+    // Simulate unlocking logic here
   };
 
   return (
@@ -15,13 +28,12 @@ const LockerRoomStore = ({ playerId, activeTab, items, setSelectedItem }) => {
         <GearCard
           key={item.id}
           item={item}
-          isUnlocked={false}
+          isUnlocked={true}
           onUnlock={handleUnlock}
-          onClick={() => setSelectedItem(item)}
         />
       ))}
     </div>
   );
 };
 
-export default LockerRoomStore;
+export default LockerRoom;

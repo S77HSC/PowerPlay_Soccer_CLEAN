@@ -1,12 +1,12 @@
-
 'use client';
 
 import React from 'react';
 import GearCard from './GearCard';
 
-const LockerRoomStore = ({ playerId, activeTab, items, setSelectedItem }) => {
+const LockerRoomStore = ({ playerId, activeTab, items = [] }) => {
   const handleUnlock = (item) => {
     console.log(`Unlocking ${item.name} for ${item.xp} XP`);
+    // Simulate unlocking logic here
   };
 
   return (
@@ -17,7 +17,6 @@ const LockerRoomStore = ({ playerId, activeTab, items, setSelectedItem }) => {
           item={item}
           isUnlocked={false}
           onUnlock={handleUnlock}
-          onClick={() => setSelectedItem(item)}
         />
       ))}
     </div>

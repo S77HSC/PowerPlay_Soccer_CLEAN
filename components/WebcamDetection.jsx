@@ -77,7 +77,7 @@ export default function WebcamDetection({ onTouchDetected, active }) {
     };
 
     if (active) {
-      interval = setInterval(detect, 1000);
+      interval = setInterval(detect, 500);
     }
     return () => clearInterval(interval);
   }, [active, onTouchDetected]);
