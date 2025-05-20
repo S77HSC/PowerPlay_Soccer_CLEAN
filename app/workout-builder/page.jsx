@@ -5,6 +5,8 @@ import { sessionData } from '../../lib/sessionData';
 import WebcamDetection from '../../components/WebcamDetection';
 import confetti from 'canvas-confetti';
 
+const API_BASE = process.env.NEXT_PUBLIC_TOUCHES_API || "https://powerplay-soccer-clean.onrender.com";
+
 export default function WorkoutBuilder() {
   const [player, setPlayer] = useState(null);
   const [points, setPoints] = useState(0);
@@ -47,7 +49,7 @@ export default function WorkoutBuilder() {
   useEffect(() => {
     const resetTouches = async () => {
       try {
-        await fetch("https://powerplay-soccer-clean.onrender.com/touches/reset", { method: "POST" });
+        await fetch(`${API_BASE}/reset-touches/`, { method: "POST" });
         await new Promise(resolve => setTimeout(resolve, 500));
       const res = await fetch(`${process.env.NEXT_PUBLIC_TOUCHES_API}/touches/`);
       const data = await res.json();
