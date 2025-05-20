@@ -49,7 +49,7 @@ export default function WorkoutBuilder() {
       try {
         await fetch("https://powerplay-soccer-clean.onrender.com/touches/reset", { method: "POST" });
         await new Promise(resolve => setTimeout(resolve, 500));
-      const res = await fetch("https://powerplay-soccer-clean.onrender.com/touches/");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_TOUCHES_API}/touches/`);
       const data = await res.json();
       const backendTouch = data.touches || 0;
       setTouchCount(0);
@@ -80,7 +80,7 @@ export default function WorkoutBuilder() {
     if (!isRunning) return;
     const interval = setInterval(async () => {
       try {
-        const res = await fetch("https://powerplay-soccer-clean.onrender.com/touches/");
+        const res = await fetch(`${process.env.NEXT_PUBLIC_TOUCHES_API}/touches/`);
         const data = await res.json();
         const newTouchCount = data.touches || 0;
         if (newTouchCount > lastBackendTouchCount) {
