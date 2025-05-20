@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
@@ -11,7 +10,7 @@ export default function WebcamDetection({ onTouchDetected, active }) {
   const [showTouch, setShowTouch] = useState(false);
   const touchCooldown = 600; // milliseconds
 
-  const MODEL_ENDPOINT = process.env.NEXT_PUBLIC_MODEL_ENDPOINT || "http://127.0.0.1:8000/detect-football/";
+  const MODEL_ENDPOINT = "http://127.0.0.1:8000/detect-football/";
 
   // Setup camera once on mount
   useEffect(() => {
@@ -27,13 +26,6 @@ export default function WebcamDetection({ onTouchDetected, active }) {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         globalStream = stream;
         videoRef.current.srcObject = globalStream;
-
-        // Mobile-friendly settings
-        videoRef.current.setAttribute("playsinline", true);
-        videoRef.current.setAttribute("autoplay", true);
-        videoRef.current.setAttribute("muted", true);
-        videoRef.current.muted = true;
-
         await videoRef.current.play();
       } catch (err) {
         console.error("Webcam access denied or failed:", err);
@@ -47,7 +39,6 @@ export default function WebcamDetection({ onTouchDetected, active }) {
     let interval;
 
     const detect = async () => {
-      console.log("Running detection...");
       const video = videoRef.current;
       if (!video || video.readyState !== 4) return;
 
@@ -74,7 +65,6 @@ export default function WebcamDetection({ onTouchDetected, active }) {
           const detected = predictions.some(p => p.class === 'sports ball' && p.confidence > 0.4);
 
           if (detected && Date.now() - lastTouchRef.current > touchCooldown) {
-            console.log("Touch detected!");
             lastTouchRef.current = Date.now();
             setShowTouch(true);
             if (onTouchDetected) onTouchDetected();
@@ -105,3 +95,6 @@ export default function WebcamDetection({ onTouchDetected, active }) {
     </div>
   );
 }
+
+// Webcam now initializes immediately on component mount
+// Canvas is off-DOM and used for detection only
