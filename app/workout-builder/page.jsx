@@ -82,7 +82,7 @@ export default function WorkoutBuilder() {
     if (!isRunning) return;
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_TOUCHES_API}/touches/`);
+       const res = await fetch(`${API_BASE}/touches/`);
         const data = await res.json();
         const newTouchCount = data.touches || 0;
         if (newTouchCount > lastBackendTouchCount) {
