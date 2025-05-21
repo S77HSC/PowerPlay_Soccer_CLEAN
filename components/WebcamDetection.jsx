@@ -61,10 +61,18 @@ export default function WebcamDetection({ onTouchDetected, active }) {
         try {
           const res = await fetch(MODEL_ENDPOINT, {
             method: 'POST',
+            mode: 'cors',
             body: formData
           });
 
-          const result = await res.json();
+          let result;
+          try {
+            result = await res.json();
+          } catch (err) {
+            console.error("Failed to parse JSON:", err);
+            return;
+          }
+
           console.log("[Detect] Response:", result);
 
           const predictions = result.predictions || [];
