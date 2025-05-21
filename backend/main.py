@@ -30,7 +30,12 @@ def get_center(box):
 # POST /detect-football/
 @app.post("/detect-football/")
 async def detect_football(file: UploadFile = File(...)):
+    if not file:
+        return {"error": "No file uploaded"}
+
     contents = await file.read()
+    if not contents:
+        return {"error": "Empty file content"}
     image_np = np.frombuffer(contents, np.uint8)
     frame = cv2.imdecode(image_np, cv2.IMREAD_COLOR)
 
