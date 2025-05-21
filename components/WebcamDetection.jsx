@@ -11,7 +11,8 @@ export default function WebcamDetection({ onTouchDetected, active }) {
   const [showTouch, setShowTouch] = useState(false);
   const touchCooldown = 600;
 
-  const MODEL_ENDPOINT = process.env.NEXT_PUBLIC_MODEL_ENDPOINT;
+  const MODEL_ENDPOINT = process.env.NEXT_PUBLIC_MODEL_ENDPOINT || "https://powerplay-api.onrender.com/detect-football/";
+  console.log("MODEL_ENDPOINT =", MODEL_ENDPOINT);
 
   useEffect(() => {
     const setupCamera = async () => {
