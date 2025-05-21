@@ -51,7 +51,7 @@ export default function WorkoutBuilder() {
       try {
         await fetch(`${API_BASE}/reset-touches/`, { method: "POST" });
         await new Promise(resolve => setTimeout(resolve, 500));
-      const res = await fetch(`${process.env.NEXT_PUBLIC_TOUCHES_API}/touches/`);
+      const res = await fetch(`${API_BASE}/touches/`);
       const data = await res.json();
       const backendTouch = data.touches || 0;
       setTouchCount(0);
