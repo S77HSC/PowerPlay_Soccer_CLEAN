@@ -5,7 +5,7 @@ import { sessionData } from '../../lib/sessionData';
 import WebcamDetection from '../../components/WebcamDetection';
 import confetti from 'canvas-confetti';
 
-const API_BASE = process.env.NEXT_PUBLIC_TOUCHES_API || "https://powerplay-soccer-clean.onrender.com";
+const API_BASE = process.env.NEXT_PUBLIC_TOUCHES_API || "https://powerplay-soccer-clean.onrender.com";console.log("TOUCHES API =", API_BASE);
 
 export default function WorkoutBuilder() {
   const [player, setPlayer] = useState(null);
