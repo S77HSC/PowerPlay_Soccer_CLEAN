@@ -9,7 +9,7 @@ import LockerRoomStore from '@/components/LockerRoomStore';
 const mockItems = {
   kits: [
     { id: 'kit1', name: 'Red Home Kit', image: '/LockerRoom/kits/powerplay_kit_red.png', xp: 100 },
-    { id: 'kit2', name: 'Blue Away Kit', image: '/LockerRoom/kits/powerplay_kit_blue.png', xp: 150 }
+    { id: 'kit2', name: 'Blue Away Kit', image: '/LockerRoom/kits/powerplay_kit_blue.png', xp: 150 },
     { id: 'kit3', name: 'Legend Red and White', image: '/LockerRoom/kits/powerplay_kit_blue.png', xp: 150 }	
   ],
   boots: [
