@@ -1,6 +1,0 @@
-train: C:/Users/PowerPlay-Dev/Football-Detection-4/train/images
-val: C:/Users/PowerPlay-Dev/Football-Detection-4/valid/images
-
-nc: 2
-names: ['football', 'objects']
-
