@@ -78,7 +78,6 @@ export default function WebcamDetection({ onTouchDetected, active }) {
 
           const detections = result.detections || [];
           const detected = detections.some(p => p.label === 'sports ball' && p.confidence > 0.4);
-
           console.log("[Detect] Found:", detections.length, "Detected?", detected);
 
           if (detected && Date.now() - lastTouchRef.current > touchCooldown) {
