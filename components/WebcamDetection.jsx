@@ -58,7 +58,7 @@ export default function WebcamDetection({ onTouchDetected, active }) {
         formData.append('file', blob, 'frame.jpg');
 
         try {
-          const res = await fetch(`${MODEL_ENDPOINT}/detect-football/`, {
+          const res = await fetch(`${MODEL_ENDPOINT}/detect-sports ball/`, {
             method: 'POST',
             mode: 'cors',
             body: formData
@@ -79,7 +79,7 @@ export default function WebcamDetection({ onTouchDetected, active }) {
           console.log("[Detect] Response:", result);
 
           const detections = result.detections || [];
-          const detected = detections.some(p => p.label === 'football' && p.confidence > 0.4);
+          const detected = detections.some(p => p.label === 'sports ball' && p.confidence > 0.4);
 
           console.log("[Detect] Found:", detections.length, "Detected?", detected);
 
