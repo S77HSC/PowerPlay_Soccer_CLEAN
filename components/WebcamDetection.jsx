@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
@@ -58,25 +59,22 @@ export default function WebcamDetection({ onTouchDetected, active }) {
         formData.append('file', blob, 'frame.jpg');
 
         try {
-          const res = await fetch(`${MODEL_ENDPOINT}/detect-sports ball/`, {
+          const res = await fetch(`${MODEL_ENDPOINT}/detect-football/`, {
             method: 'POST',
             mode: 'cors',
             body: formData
           });
 
           let result;
-	try {
-  	const text = await res.text();
-  	console.log("[Detect] Raw response text:", text);
-  	result = JSON.parse(text);
-  	console.log("[Detect] Parsed JSON:", result);
-	} catch (err) {
-	  console.error("Failed to parse or fetch response:", err);
-  	return;
-	}
-
-
-          console.log("[Detect] Response:", result);
+          try {
+            const text = await res.text();
+            console.log("[Detect] Raw response text:", text);
+            result = JSON.parse(text);
+            console.log("[Detect] Parsed JSON:", result);
+          } catch (err) {
+            console.error("Failed to parse or fetch response:", err);
+            return;
+          }
 
           const detections = result.detections || [];
           const detected = detections.some(p => p.label === 'sports ball' && p.confidence > 0.4);
