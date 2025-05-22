@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
@@ -11,7 +10,7 @@ export default function WebcamDetection({ onTouchDetected, active }) {
   const [showTouch, setShowTouch] = useState(false);
   const touchCooldown = 600;
 
-  const MODEL_ENDPOINT = process.env.NEXT_PUBLIC_MODEL_ENDPOINT=https://powerplay-soccer-clean.onrender.com";
+  const MODEL_ENDPOINT = process.env.NEXT_PUBLIC_MODEL_ENDPOINT;
   console.log("MODEL_ENDPOINT =", MODEL_ENDPOINT);
 
   useEffect(() => {
@@ -59,7 +58,7 @@ export default function WebcamDetection({ onTouchDetected, active }) {
         formData.append('file', blob, 'frame.jpg');
 
         try {
-          const res = await fetch(MODEL_ENDPOINT, {
+          const res = await fetch(`${MODEL_ENDPOINT}/detect-football/`, {
             method: 'POST',
             mode: 'cors',
             body: formData
@@ -75,10 +74,10 @@ export default function WebcamDetection({ onTouchDetected, active }) {
 
           console.log("[Detect] Response:", result);
 
-		const detections = result.detections || [];
-		const detected = detections.some(p => p.label === 'football' && p.confidence > 0.4);
+          const detections = result.detections || [];
+          const detected = detections.some(p => p.label === 'football' && p.confidence > 0.4);
 
-          console.log("[Detect] Found:", predictions.length, "Detected?", detected);
+          console.log("[Detect] Found:", detections.length, "Detected?", detected);
 
           if (detected && Date.now() - lastTouchRef.current > touchCooldown) {
             console.log("[Detect] TOUCH!");
