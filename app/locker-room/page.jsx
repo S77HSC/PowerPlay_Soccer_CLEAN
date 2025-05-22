@@ -10,13 +10,14 @@ const mockItems = {
   kits: [
     { id: 'kit1', name: 'Red Home Kit', image: '/LockerRoom/kits/powerplay_kit_red.png', xp: 100 },
     { id: 'kit2', name: 'Blue Away Kit', image: '/LockerRoom/kits/powerplay_kit_blue.png', xp: 150 }
+    { id: 'kit3', name: 'Legend Red and White', image: '/LockerRoom/kits/powerplay_kit_blue.png', xp: 150 }	
   ],
   boots: [
     { id: 'boot1', name: 'Power Boots', image: '/LockerRoom/boots/power_boots.png', xp: 140 },
     { id: 'boot2', name: 'Speed Boots', image: '/LockerRoom/boots/speed_boots.png', xp: 160 },
     { id: 'boot3', name: 'Precision Boots', image: '/LockerRoom/boots/power_precision.png', xp: 190 },
     { id: 'boot4', name: 'Legend Boots', image: '/LockerRoom/boots/legend_boots.png', xp: 190 },
-    { id: 'boot5', name: 'Power Boots', image: '/LockerRoom/boots/launching_soon.png', xp: 300 }
+    { id: 'boot5', name: 'Power Boots', image: '/LockerRoom/boots/star_striker.png', xp: 300},      { id: 'boot6', name: 'Power Boots', image: '/LockerRoom/boots/launching_soon.png', xp: 300 }
   ],
   badges: [
     { id: 'badge1', name: 'Champion Badge', image: '/LockerRoom/badges/champion.png', xp: 80 },

@@ -65,12 +65,16 @@ export default function WebcamDetection({ onTouchDetected, active }) {
           });
 
           let result;
-          try {
-            result = await res.json();
-          } catch (err) {
-            console.error("Failed to parse JSON:", err);
-            return;
-          }
+	try {
+  	const text = await res.text();
+  	console.log("[Detect] Raw response text:", text);
+  	result = JSON.parse(text);
+  	console.log("[Detect] Parsed JSON:", result);
+	} catch (err) {
+	  console.error("Failed to parse or fetch response:", err);
+  	return;
+	}
+
 
           console.log("[Detect] Response:", result);
 
